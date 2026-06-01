@@ -1,0 +1,28 @@
+{
+  "enabledPlugins": {
+    "bugsee@bugsee-plugin-marketplace": true
+  },
+  "permissions": {
+    "allow": [
+      "Bash(ls:*)",
+      "Bash(pwd:*)",
+      "Bash(find:*)",
+      "Bash(file:*)",
+      "Bash(stat:*)",
+      "Bash(wc:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(cat:*)",
+      "Bash(tree:*)",
+      "Bash(grep:*)",
+      "Skill(bugsee-sdk-setup)",
+      "Skill(bugsee-workflow)",
+      "Skill(bugsee-fix-issues)",
+      "Skill(bugsee-upload-symbols)",
+      "WebFetch(domain:docs.bugsee.com)",
+      "WebFetch(domain:api.bugsee.com)",
+      "WebFetch(domain:app.bugsee.com)"
+    ],
+    "deny": []
+  }
+}

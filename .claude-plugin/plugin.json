@@ -1,0 +1,17 @@
+{
+  "name": "bugsee",
+  "description": "Bugsee plugin for Claude Code: set up Bugsee SDKs, debug crashes and bug reports via the Bugsee MCP server, and upload symbols. Includes MCP, skills, and setup wizards.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Bugsee"
+  },
+  "keywords": ["bugsee", "bug-reporting", "crash-reporting", "monitoring", "debugging", "mobile"],
+  "license": "MIT",
+  "repository": "https://github.com/bugsee/bugsee-for-ai",
+  "mcpServers": {
+    "bugsee": {
+      "type": "http",
+      "url": "https://api.bugsee.com/mcp"
+    }
+  }
+}

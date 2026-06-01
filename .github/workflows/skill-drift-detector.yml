@@ -1,0 +1,247 @@
+name: Skill Drift Detector
+
+# Weekly (and on-demand) check that each bundled SDK skill still matches the live
+# Bugsee SDK. One agent runs per skill, reads the SDK source at HEAD, compares it
+# to the local bundle, and emits one of: a skill edit (-> PR), a manual_review
+# summary (-> issue), or no_drift (-> nothing).
+#
+# ───────────────────────── SETUP REQUIRED BEFORE ENABLING ─────────────────────
+#  1. Secrets:
+#       ANTHROPIC_API_KEY      - drives the updater agent
+#       BUGSEE_SDK_READ_TOKEN  - fine-grained PAT, READ scope, restricted to ONLY
+#                                the SDK repos in the matrix (per-repo if possible).
+#                                The detect job feeds UNTRUSTED upstream content to
+#                                the agent, so minimize this token's blast radius —
+#                                do not reuse a broad/classic PAT. NOTE: the agent's
+#                                `gh api` grant is not method-restricted, so the
+#                                token's read-only scope is the only write/exfil guard.
+#  2. Verify the SDK -> repo mapping in the `detect` matrix below (lines marked
+#     `# VERIFY`). Several core SDK repos are private; confirm the exact names.
+#  3. Verify/refresh the pinned action SHAs and the pinned Claude Code CLI version.
+# ──────────────────────────────────────────────────────────────────────────────
+
+on:
+  schedule:
+    - cron: "0 6 * * 1" # Mondays 06:00 UTC
+  workflow_dispatch:
+    inputs:
+      skill:
+        description: "Limit to a single skill (e.g. bugsee-ios-sdk). Blank = all."
+        required: false
+        default: ""
+
+# Least privilege: no permissions at the workflow root. Each job opts in.
+permissions: {}
+
+concurrency:
+  group: skill-drift
+  cancel-in-progress: false
+
+jobs:
+  # ── 1. DETECT ─ runs the agent with NO repo-write token ─────────────────────
+  detect:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - skill: bugsee-ios-sdk
+            repo: bugsee/spm                    # VERIFY (iOS SPM distribution)
+          - skill: bugsee-android-sdk
+            repo: bugsee/bugsee-android         # VERIFY (private; stable skill reads the repo's default branch)
+          - skill: bugsee-android-sdk-7x
+            repo: bugsee/bugsee-android         # VERIFY (private)
+            ref: "7.x"                          # VERIFY: 7.x branch/tag — MUST differ from the stable leg's default branch, else 7.x drifts against stable source
+          - skill: bugsee-flutter-sdk
+            repo: bugsee/flutter-bugsee         # public
+          - skill: bugsee-react-native-sdk
+            repo: bugsee/react-native-bugsee    # VERIFY (private)
+          - skill: bugsee-unity-sdk
+            repo: bugsee/unity                  # public
+          - skill: bugsee-dotnet-sdk
+            repo: bugsee/bugsee-dotnet          # VERIFY (private)
+          - skill: bugsee-xamarin-sdk
+            repo: bugsee/bugsee-xamarin         # VERIFY (private)
+          - skill: bugsee-cordova-sdk
+            repo: bugsee/cordova-plugin-bugsee  # VERIFY (private)
+          - skill: bugsee-kmp-sdk
+            repo: bugsee/bugsee-compose         # VERIFY (KMP/Compose source)
+    steps:
+      - name: Checkout (this repo, read-only)
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Skip when a single skill was requested and this isn't it
+        id: gate
+        env:
+          ONLY: ${{ github.event.inputs.skill }}
+          SKILL: ${{ matrix.skill }}
+        run: |
+          if [ -n "$ONLY" ] && [ "$ONLY" != "$SKILL" ]; then
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install Claude Code CLI
+        if: steps.gate.outputs.run == 'true'
+        run: npm install -g @anthropic-ai/claude-code@1.0.44 # VERIFY version, then pin
+
+      - name: Run skill-updater agent (read-only tools)
+        if: steps.gate.outputs.run == 'true'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GH_TOKEN: ${{ secrets.BUGSEE_SDK_READ_TOKEN }} # reads SDK source repos
+          SKILL: ${{ matrix.skill }}
+          SDK_REPO: ${{ matrix.repo }}
+          SDK_REF: ${{ matrix.ref }}
+        run: |
+          mkdir -p .drift
+          PROMPT="$(cat .agents/skill-updater.md)
+
+          ## This run
+          SKILL=$SKILL
+          SDK_REPO=$SDK_REPO
+          SDK_REF=$SDK_REF   (read the SDK source at this git ref; if empty, use the repo's default branch)
+          Local bundle: skills/$SKILL/SKILL.md
+
+          When done, write your verdict to .drift/$SKILL.json as
+          {\"status\":\"no_drift|drift|manual_review\",\"summary\":\"...\"}.
+          For 'drift', also leave your edits in skills/$SKILL/ (do not commit)."
+
+          # Tools are restricted to read/edit of the working tree + read-only gh.
+          claude -p "$PROMPT" \
+            --allowedTools "Read Edit Write Glob Grep Bash(gh api:*) Bash(gh pr list:*) Bash(gh pr view:*)" \
+            --permission-mode acceptEdits || true
+
+      - name: Package verdict + patch (skills/<skill>/ only)
+        if: steps.gate.outputs.run == 'true'
+        env:
+          SKILL: ${{ matrix.skill }}
+        run: |
+          mkdir -p out
+          [ -f ".drift/$SKILL.json" ] && cp ".drift/$SKILL.json" "out/verdict.json" \
+            || echo '{"status":"no_drift","summary":"agent produced no verdict"}' > out/verdict.json
+          # Capture edits, scoped strictly to this skill's directory. `git add -N`
+          # so brand-new files the agent created are included in the diff (intent-
+          # to-add only). Pin default a/ b/ diff prefixes so the apply-job allowlist
+          # regex matches reliably.
+          git add -N -- "skills/$SKILL/" 2>/dev/null || true
+          git -c diff.noprefix=false -c diff.mnemonicprefix=false \
+            diff -- "skills/$SKILL/" > "out/changes.patch" || true
+          echo "$SKILL" > out/skill.txt
+
+      - name: Upload result
+        if: steps.gate.outputs.run == 'true'
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
+        with:
+          name: drift-${{ matrix.skill }}
+          path: out/
+          retention-days: 7
+
+  # ── 2. APPLY ─ deterministic shell, no LLM, enforces a path allowlist ───────
+  apply:
+    needs: detect
+    # Run even if some detect matrix legs failed (fail-fast: false) so skills
+    # that did detect drift still get their PRs/issues opened.
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Download all drift results
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
+        with:
+          path: drift-results
+
+      - name: Open PRs / issues per skill
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          # Bodies wrap the agent summary with a banner: it is machine-generated
+          # from UNTRUSTED upstream content, so reviewers must read it critically.
+          # printf keeps every value literal (no shell expansion of the summary).
+          banner='> [!WARNING] Machine-generated from untrusted upstream SDK content — review the diff and this text critically.'
+
+          for dir in drift-results/drift-*; do
+            [ -d "$dir" ] || continue
+            skill="$(cat "$dir/skill.txt" 2>/dev/null || true)"
+            [ -n "$skill" ] || { echo "skip $dir: no skill.txt"; continue; }
+            status="$(node -e "process.stdout.write(require('./$dir/verdict.json').status||'')" 2>/dev/null || echo "")"
+            summary="$(node -e "process.stdout.write(require('./$dir/verdict.json').summary||'')" 2>/dev/null || echo "")"
+            patch="$dir/changes.patch"
+
+            case "$status" in
+              drift)
+                # Hard path allowlist (matches only real diff headers, anchored to
+                # 'b/'/'a/' so diff CONTENT lines beginning '++ '/'-- ' can't pose as
+                # headers): every +++/--- header path must live inside
+                # skills/<skill>/, contain no ".." traversal, and the patch must
+                # carry no rename/copy headers, mode changes, symlink modes, or
+                # binary hunks (none of which have +++/--- lines, so they could
+                # redirect a write outside the directory).
+                if [ -s "$patch" ] \
+                   && ! grep -E '^\+\+\+ b/|^--- a/' "$patch" \
+                        | grep -vE "(^\+\+\+ b/skills/$skill/|^--- a/skills/$skill/|/dev/null)" \
+                        | grep -q . \
+                   && ! grep -E '^\+\+\+ b/|^--- a/' "$patch" | grep -q '\.\.' \
+                   && ! grep -qE '^(rename|copy) (from|to) ' "$patch" \
+                   && ! grep -qE '^(old mode |new mode |new file mode 12|deleted file mode 12|GIT binary patch)' "$patch"; then
+                  # Branch from main so PRs don't stack. Chain with && so any step
+                  # failing (git apply, or git commit finding nothing staged)
+                  # short-circuits to the else/issue path — set -e is NOT active in
+                  # an if-condition, so the && chain is what guards the loop.
+                  # Plain --force: drift/$skill is a bot-owned branch recreated from
+                  # origin/main each run (--force-with-lease would reject the re-push,
+                  # as the fresh shallow checkout has no tracking ref for it).
+                  if git checkout -B "drift/$skill" origin/main \
+                     && git config user.name "bugsee-skill-bot" \
+                     && git config user.email "bot@users.noreply.github.com" \
+                     && git apply --whitespace=nowarn "$patch" \
+                     && git add "skills/$skill/" \
+                     && git commit -m "skills($skill): sync with upstream SDK changes" \
+                     && git push --force origin "drift/$skill"; then
+                    body="$(printf '%s\n\nAutomated drift fix for `%s`. This branch is bot-managed and force-pushed on each weekly run — branch off it rather than committing to it.\n\n%s' "$banner" "$skill" "$summary")"
+                    # Fall back to an issue if PR creation is blocked (e.g. the org
+                    # "Allow GitHub Actions to create ... pull requests" setting).
+                    gh pr create --base main --head "drift/$skill" \
+                      --title "skills($skill): sync with upstream SDK" --body "$body" \
+                      || gh issue create \
+                           --title "Skill drift PR could not be opened: $skill" \
+                           --body "$(printf 'Branch `drift/%s` was pushed but PR creation failed (check the org PR-creation setting); open the PR manually.\n\n%s' "$skill" "$body")" \
+                      || true
+                  else
+                    gh issue create \
+                      --title "Skill drift apply failed: $skill" \
+                      --body "$(printf '%s\n\nApplying the drift patch for `%s` failed (patch no longer applies cleanly, or nothing to commit). Review manually.\n\n%s' "$banner" "$skill" "$summary")" || true
+                  fi
+                else
+                  gh issue create \
+                    --title "Skill drift: $skill (patch rejected by path allowlist)" \
+                    --body "$(printf '%s\n\nThe drift patch for `%s` touched files outside `skills/%s/` (or used `..` traversal) and was rejected. Review manually.\n\n%s' "$banner" "$skill" "$skill" "$summary")" || true
+                fi
+                ;;
+              manual_review)
+                gh issue create --title "Skill drift review: $skill" \
+                  --body "$(printf '%s\n\n%s' "$banner" "$summary")" || true
+                ;;
+              no_drift)
+                echo "$skill: no drift."
+                ;;
+              *)
+                # Empty/unrecognized status = missing or corrupt verdict.json:
+                # surface it instead of silently treating it as no-drift.
+                gh issue create \
+                  --title "Skill drift: unreadable verdict for $skill" \
+                  --body "$(printf 'The drift verdict for `%s` was missing, corrupt, or had an unrecognized status. The detect run may have failed; re-run manually.' "$skill")" || true
+                ;;
+            esac
+          done

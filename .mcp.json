@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "bugsee": {
+      "type": "http",
+      "url": "https://api.bugsee.com/mcp"
+    }
+  }
+}
