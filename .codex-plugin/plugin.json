@@ -1,0 +1,37 @@
+{
+  "name": "bugsee",
+  "version": "1.0.0",
+  "description": "Set up Bugsee SDKs, debug crashes and bug reports via the Bugsee MCP server, and upload symbols.",
+  "author": {
+    "name": "Bugsee",
+    "url": "https://bugsee.com"
+  },
+  "homepage": "https://docs.bugsee.com/",
+  "repository": "https://github.com/bugsee/bugsee-for-ai",
+  "license": "MIT",
+  "keywords": ["bugsee", "bug-reporting", "crash-reporting", "monitoring", "debugging", "mobile"],
+  "skills": "./skills",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Bugsee",
+    "shortDescription": "Set up Bugsee SDKs and debug crashes via the Bugsee MCP.",
+    "longDescription": "Bugsee plugin for Codex: detect the project's platform and run a complete Bugsee SDK setup (iOS, Android, Flutter, React Native, Unity, .NET/MAUI, Xamarin, Cordova, KMP); triage and fix crashes, errors, and bug reports through the read-only Bugsee MCP server; and upload dSYMs, source maps, and mapping files for readable stack traces.",
+    "developerName": "Bugsee",
+    "category": "developer-tools",
+    "capabilities": [
+      "SDK setup wizards",
+      "Crash and bug triage via the Bugsee MCP",
+      "Symbol and source-map upload"
+    ],
+    "websiteURL": "https://bugsee.com",
+    "privacyPolicyURL": "https://bugsee.com/privacy/",
+    "termsOfServiceURL": "https://bugsee.com/tos/",
+    "brandColor": "#FF5858",
+    "logo": "./assets/logo.svg",
+    "defaultPrompt": [
+      "Add Bugsee to my app",
+      "Fix Bugsee issue MYAPP-123",
+      "Upload my dSYMs to Bugsee"
+    ]
+  }
+}

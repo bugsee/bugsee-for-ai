@@ -1,0 +1,12 @@
+{
+  "name": "bugsee",
+  "description": "Bugsee plugin for Cursor: set up Bugsee SDKs, debug crashes and bug reports via the Bugsee MCP server, and upload symbols. Includes MCP and skills.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Bugsee"
+  },
+  "keywords": ["bugsee", "bug-reporting", "crash-reporting", "monitoring", "debugging", "mobile"],
+  "logo": "assets/logo.svg",
+  "license": "MIT",
+  "repository": "https://github.com/bugsee/bugsee-for-ai"
+}

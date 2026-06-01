@@ -1,0 +1,24 @@
+# Declared tool policy for the skill-drift agent (.github/workflows/skill-drift-detector.yml).
+#
+# ENFORCEMENT NOTE: at runtime the agent's tools are restricted by the
+# `--allowedTools` flag passed to the `claude` CLI in that workflow — NOT by this
+# file. This file documents and MIRRORS that allowlist so the declared intent and
+# the enforced policy stay in sync; keep the two identical when either changes.
+#
+# Semantics: `allow` is an allowlist — anything not listed is denied by default.
+# The detect job also runs with no token that can write to this repo, so the
+# agent cannot push or open PRs regardless of the tools it is granted.
+
+[permissions]
+allow = [
+  # Read and edit only the working tree (skill bundles).
+  "Read",
+  "Edit",
+  "Write",
+  "Glob",
+  "Grep",
+  # Narrow, read-only GitHub lookups against the SDK source repo.
+  "Bash(gh api:*)",
+  "Bash(gh pr list:*)",
+  "Bash(gh pr view:*)",
+]

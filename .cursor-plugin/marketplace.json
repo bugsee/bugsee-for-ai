@@ -1,0 +1,13 @@
+{
+  "name": "bugsee-plugin-marketplace",
+  "owner": {
+    "name": "Bugsee"
+  },
+  "plugins": [
+    {
+      "name": "bugsee",
+      "source": "./",
+      "description": "Set up Bugsee SDKs, debug crashes and bug reports, and upload symbols. Includes MCP functionality and skills."
+    }
+  ]
+}
