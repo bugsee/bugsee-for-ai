@@ -18,6 +18,7 @@
       "Skill(bugsee-sdk-setup)",
       "Skill(bugsee-workflow)",
       "Skill(bugsee-fix-issues)",
+      "Skill(bugsee-build-insights)",
       "Skill(bugsee-upload-symbols)",
       "WebFetch(domain:docs.bugsee.com)",
       "WebFetch(domain:api.bugsee.com)",

@@ -1,7 +1,7 @@
 {
   "name": "bugsee",
-  "version": "1.0.0",
-  "description": "Set up Bugsee SDKs, debug crashes and bug reports via the Bugsee MCP server, and upload symbols.",
+  "version": "1.1.0",
+  "description": "Set up Bugsee SDKs, debug crashes and bug reports, inspect builds for size and dependency vulnerabilities, and upload symbols — via the Bugsee MCP server and skills.",
   "author": {
     "name": "Bugsee",
     "url": "https://bugsee.com"
@@ -15,12 +15,13 @@
   "interface": {
     "displayName": "Bugsee",
     "shortDescription": "Set up Bugsee SDKs and debug crashes via the Bugsee MCP.",
-    "longDescription": "Bugsee plugin for Codex: detect the project's platform and run a complete Bugsee SDK setup (iOS, Android, Flutter, React Native, Unity, .NET/MAUI, Xamarin, Cordova, KMP); triage and fix crashes, errors, and bug reports through the read-only Bugsee MCP server; and upload dSYMs, source maps, and mapping files for readable stack traces.",
+    "longDescription": "Bugsee plugin for Codex: detect the project's platform and run a complete Bugsee SDK setup (iOS, Android, Flutter, React Native, Unity, .NET/MAUI, Xamarin, Cordova, KMP); triage and fix crashes, errors, and bug reports through the Bugsee MCP server; inspect builds for size, dependency, and timing regressions and dependency vulnerabilities; and upload dSYMs, source maps, and mapping files for readable stack traces.",
     "developerName": "Bugsee",
     "category": "developer-tools",
     "capabilities": [
       "SDK setup wizards",
       "Crash and bug triage via the Bugsee MCP",
+      "Build size & dependency vulnerability insights",
       "Symbol and source-map upload"
     ],
     "websiteURL": "https://bugsee.com",

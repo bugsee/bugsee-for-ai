@@ -17,7 +17,7 @@ the canonical SDK skills from `https://docs.bugsee.com/ai/agent-skills/`.
 | Router | What it does |
 |---|---|
 | [`bugsee-sdk-setup`](skills/bugsee-sdk-setup/SKILL.md) | Set up Bugsee in any mobile or cross-platform project. |
-| [`bugsee-workflow`](skills/bugsee-workflow/SKILL.md) | Debug Bugsee issues and maintain readable crash reports. |
+| [`bugsee-workflow`](skills/bugsee-workflow/SKILL.md) | Debug Bugsee issues, inspect builds, and keep stack traces readable. |
 
 ## SDK Setup
 
@@ -43,7 +43,8 @@ Debug Bugsee issues and keep crash reports readable.
 
 | Skill | What it does |
 |---|---|
-| [`bugsee-fix-issues`](skills/bugsee-fix-issues/SKILL.md) | Triage and fix Bugsee crashes, errors, and bug reports using the Bugsee MCP server. |
+| [`bugsee-build-insights`](skills/bugsee-build-insights/SKILL.md) | Inspect builds and catch regressions with the Bugsee MCP server — app/install size, dependency changes, build timings, and dependency vulnerabilities (SCA). |
+| [`bugsee-fix-issues`](skills/bugsee-fix-issues/SKILL.md) | Triage and fix Bugsee crashes, errors, memory/thread leaks, and bug reports using the Bugsee MCP server. |
 | [`bugsee-upload-symbols`](skills/bugsee-upload-symbols/SKILL.md) | Make Bugsee stack traces readable by uploading debug symbols, source maps, and mapping files. |
 
 ## Internal

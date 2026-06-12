@@ -1,7 +1,7 @@
 {
   "name": "bugsee",
-  "description": "Bugsee plugin for Claude Code: set up Bugsee SDKs, debug crashes and bug reports via the Bugsee MCP server, and upload symbols. Includes MCP, skills, and setup wizards.",
-  "version": "1.0.0",
+  "description": "Bugsee plugin for Claude Code: set up Bugsee SDKs, debug crashes and bug reports, inspect builds for size and dependency vulnerabilities, and upload symbols — via the Bugsee MCP server and skills.",
+  "version": "1.1.0",
   "author": {
     "name": "Bugsee"
   },

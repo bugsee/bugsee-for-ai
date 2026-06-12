@@ -51,6 +51,7 @@ Every skill uses YAML frontmatter with `allowed-tools` — required by Cursor an
 | Skill | Purpose |
 |---|---|
 | `bugsee-fix-issues` | Triage and fix crashes/errors/bug reports via the Bugsee MCP server |
+| `bugsee-build-insights` | Inspect builds for size/dependency/timing regressions and dependency vulnerabilities via the Bugsee MCP server |
 | `bugsee-upload-symbols` | Upload dSYMs, source maps, and mapping files for readable traces |
 
 ### Internal
@@ -61,7 +62,13 @@ Every skill uses YAML frontmatter with `allowed-tools` — required by Cursor an
 
 ## MCP Server
 
-The Bugsee MCP server is read-only (scope `mcp:read`) and exposes `list_applications`, `list_issues`, and `get_issue`, plus the `/bugsee_fix` prompt. Base URL `https://api.bugsee.com/mcp` (OAuth 2.1/PKCE, or token URL `https://api.bugsee.com/mcp/<token>`). Configuration: <https://docs.bugsee.com/mcp/configuration/>.
+The Bugsee MCP server (base URL `https://api.bugsee.com/mcp`; OAuth 2.1/PKCE, or token URL `https://api.bugsee.com/mcp/<token>`) exposes eleven tools across three families, plus the `/bugsee_fix` prompt:
+
+- **Applications:** `list_applications`
+- **Issues:** `list_issues`, `get_issue`, `get_issue_resource`
+- **Builds:** `list_builds`, `list_latest_builds`, `get_build`, `get_build_by_commit`, `get_build_regressions`, `list_build_vulnerabilities`, `trigger_build_vuln_scan`
+
+All are read-only except `trigger_build_vuln_scan` (queues a dependency-vulnerability scan; requires `modify` permission). Issue tools power `bugsee-fix-issues`; build tools power `bugsee-build-insights`. Tool reference: <https://docs.bugsee.com/mcp/usage/>. Configuration: <https://docs.bugsee.com/mcp/configuration/>.
 
 ## Skill Tree Navigation
 
