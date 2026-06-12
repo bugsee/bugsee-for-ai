@@ -1,11 +1,12 @@
 # Bugsee for AI
 
-The official Bugsee plugin for AI coding assistants. It teaches Claude Code, Cursor, and other agents how to **set up Bugsee SDKs**, **debug Bugsee crashes and bug reports**, and **upload symbols** for readable stack traces — using the Bugsee MCP server and a library of opinionated, platform-specific skills.
+The official Bugsee plugin for AI coding assistants. It teaches Claude Code, Cursor, and other agents how to **set up Bugsee SDKs**, **debug Bugsee crashes and bug reports**, **track build size and dependency vulnerabilities**, and **upload symbols** for readable stack traces — using the Bugsee MCP server and a library of opinionated, platform-specific skills.
 
 ## What You Can Do
 
 - **Add Bugsee to an app** — detect the platform and run a complete, verified SDK setup (install → initialize → configure) for iOS, Android, Flutter, React Native, Unity, .NET/MAUI, Xamarin, Cordova, or Kotlin Multiplatform.
 - **Fix issues from Bugsee** — pull a crash, error, or bug report's full context (stack trace, breadcrumbs, network, logs) into your editor and root-cause it against your code.
+- **Track build health** — check build size, what a release added or removed, size/dependency/timing regressions, and dependency vulnerabilities.
 - **Keep traces readable** — upload dSYMs, JavaScript source maps, Android mapping files, and other symbols so production stack traces resolve to your source.
 
 ## Installation
@@ -25,7 +26,7 @@ Point Cursor at this repository — skills and the MCP config live at the repo r
 
 ### OpenAI Codex
 
-This repo is also a Codex plugin (`.codex-plugin/plugin.json`). Codex auto-discovers the skills from `./skills` and the read-only Bugsee MCP server from `./.mcp.json`.
+This repo is also a Codex plugin (`.codex-plugin/plugin.json`). Codex auto-discovers the skills from `./skills` and the Bugsee MCP server from `./.mcp.json`.
 
 - **Skills:** point Codex at this repository, or install individual skills into `~/.codex/skills/`, e.g.:
 
@@ -54,13 +55,14 @@ Clone the repository and load it as a local plugin/marketplace in your assistant
 `bugsee-workflow` routes to:
 
 - `bugsee-fix-issues` — triage and fix crashes/errors/bug reports using the Bugsee MCP server.
+- `bugsee-build-insights` — inspect builds for size/dependency/timing regressions and dependency vulnerabilities via the Bugsee MCP server.
 - `bugsee-upload-symbols` — upload dSYMs, source maps, and mapping files.
 
 See [`SKILL_TREE.md`](SKILL_TREE.md) for the full index.
 
 ## Bugsee MCP Server
 
-The plugin connects the read-only Bugsee MCP server at `https://api.bugsee.com/mcp`, which exposes `list_applications`, `list_issues`, and `get_issue` (plus the `/bugsee_fix` prompt). Authenticate with OAuth 2.1 (recommended) or a personal access token (`https://api.bugsee.com/mcp/<token>`).
+The plugin connects the Bugsee MCP server at `https://api.bugsee.com/mcp`. It exposes eleven tools across three families — applications, issues (`list_issues`, `get_issue`, `get_issue_resource`), and builds (`list_builds`, `list_latest_builds`, `get_build`, `get_build_by_commit`, `get_build_regressions`, `list_build_vulnerabilities`, `trigger_build_vuln_scan`) — plus the `/bugsee_fix` prompt. All are read-only except `trigger_build_vuln_scan`. Authenticate with OAuth 2.1 (recommended) or a personal access token (`https://api.bugsee.com/mcp/<token>`).
 
 - MCP overview & tools: <https://docs.bugsee.com/mcp/>
 - Per-client setup: <https://docs.bugsee.com/mcp/configuration/>
