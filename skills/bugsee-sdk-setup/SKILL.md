@@ -41,7 +41,7 @@ Each SDK skill contains its own detection logic, prerequisites, and step-by-step
 |---|---|---|
 | iOS / iPadOS (Swift, Objective-C) | [`bugsee-ios-sdk`](../bugsee-ios-sdk/SKILL.md) | `sdk/ios/SKILL.md` |
 | Android (Kotlin, Java) | [`bugsee-android-sdk`](../bugsee-android-sdk/SKILL.md) | `sdk/android/SKILL.md` |
-| Android 7.x (Beta) | [`bugsee-android-sdk-7x`](../bugsee-android-sdk-7x/SKILL.md) | `sdk/android/v7/SKILL.md` |
+| Android 6.x (Legacy) | [`bugsee-android-sdk-6x`](../bugsee-android-sdk-6x/SKILL.md) | `sdk/android/v6/SKILL.md` |
 | Flutter / Dart | [`bugsee-flutter-sdk`](../bugsee-flutter-sdk/SKILL.md) | `sdk/flutter/SKILL.md` |
 | React Native | [`bugsee-react-native-sdk`](../bugsee-react-native-sdk/SKILL.md) | `sdk/react-native/SKILL.md` |
 | Unity | [`bugsee-unity-sdk`](../bugsee-unity-sdk/SKILL.md) | `sdk/unity/SKILL.md` |
@@ -63,7 +63,7 @@ When more than one SDK could match, prefer the more specific one:
 - **.NET MAUI** (`*.csproj` with `net*-ios`/`net*-android` target frameworks) → `bugsee-dotnet-sdk`
 - **Xamarin** (`*.csproj` referencing `Xamarin.*`, `Xamarin.Forms`) → `bugsee-xamarin-sdk`
 - **Kotlin Multiplatform** (`*.gradle.kts` with `kotlin("multiplatform")`, `bugsee-kotlin-multiplatform`) → `bugsee-kmp-sdk`
-- **Android only** (`build.gradle`/`build.gradle.kts` with the Android plugin, no cross-platform framework) → `bugsee-android-sdk`. Use `bugsee-android-sdk-7x` **only** when the user explicitly asks for 7.x / beta.
+- **Android only** (`build.gradle`/`build.gradle.kts` with the Android plugin, no cross-platform framework) → `bugsee-android-sdk` (7.x, the current SDK). Use `bugsee-android-sdk-6x` **only** when the app is pinned to the 6.x line or the user explicitly asks for the 6.x / legacy SDK.
 - **iOS only** (`Podfile`, `*.xcodeproj`/`*.xcworkspace`, no cross-platform framework) → `bugsee-ios-sdk`
 - **No match** → point the user to the [Bugsee Docs](https://docs.bugsee.com/).
 
@@ -74,8 +74,8 @@ Match the project to a skill by keywords.
 | Keywords | Skill |
 |---|---|
 | ios, ipados, swift, objective-c, cocoapods, spm, swiftui, uikit, xcode | `bugsee-ios-sdk` |
-| android, kotlin, java, gradle, jetpack compose, okhttp, ktor | `bugsee-android-sdk` |
-| android 7, android beta, apm, auto-init, extension modules | `bugsee-android-sdk-7x` |
+| android, kotlin, java, gradle, jetpack compose, okhttp, ktor, apm, auto-init, extension modules | `bugsee-android-sdk` |
+| android 6, android 6.x, legacy android, old bugsee-android | `bugsee-android-sdk-6x` |
 | flutter, dart, pubspec | `bugsee-flutter-sdk` |
 | react native, expo, react-native-bugsee, metro | `bugsee-react-native-sdk` |
 | unity, c#, game, il2cpp, mono | `bugsee-unity-sdk` |

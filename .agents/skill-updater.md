@@ -6,7 +6,7 @@ Autonomous agent run weekly by `.github/workflows/skill-drift-detector.yml`. For
 
 - `SKILL` — the skill name, e.g. `bugsee-ios-sdk`.
 - `SDK_REPO` — the Bugsee SDK source repo, e.g. `bugsee/spm` (read access provided via `BUGSEE_SDK_READ_TOKEN`).
-- `SDK_REF` — the git ref (branch/tag) to read the SDK source at; empty means the repo's default branch. Set per matrix leg so version-specific skills (e.g. `bugsee-android-sdk-7x`) read their own line, not the same HEAD as the stable skill.
+- `SDK_REF` — the git ref (branch/tag) to read the SDK source at; empty means the repo's default branch. Set per matrix leg so version-specific skills (e.g. `bugsee-android-sdk-6x`) read their own line, not the same HEAD as the current skill.
 - The local bundle at `skills/$SKILL/SKILL.md`.
 
 ## Procedure

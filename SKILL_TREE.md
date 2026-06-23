@@ -26,8 +26,8 @@ the platform and loads the right skill.
 
 | Skill | What it does |
 |---|---|
-| [`bugsee-android-sdk`](skills/bugsee-android-sdk/SKILL.md) | Full Bugsee SDK setup for Android. |
-| [`bugsee-android-sdk-7x`](skills/bugsee-android-sdk-7x/SKILL.md) | Full Bugsee 7.x (beta) setup for Android. |
+| [`bugsee-android-sdk`](skills/bugsee-android-sdk/SKILL.md) | Full Bugsee SDK setup for Android (7.x — the current SDK). |
+| [`bugsee-android-sdk-6x`](skills/bugsee-android-sdk-6x/SKILL.md) | Bugsee SDK setup for legacy Android 6.x apps. |
 | [`bugsee-cordova-sdk`](skills/bugsee-cordova-sdk/SKILL.md) | Full Bugsee SDK setup for Cordova. |
 | [`bugsee-dotnet-sdk`](skills/bugsee-dotnet-sdk/SKILL.md) | Full Bugsee SDK setup for .NET MAUI. |
 | [`bugsee-flutter-sdk`](skills/bugsee-flutter-sdk/SKILL.md) | Full Bugsee SDK setup for Flutter. |
