@@ -48,7 +48,7 @@ Clone the repository and load it as a local plugin/marketplace in your assistant
 
 ### SDK Setup
 
-`bugsee-sdk-setup` detects your platform and loads the right wizard: `bugsee-ios-sdk`, `bugsee-android-sdk` (and `bugsee-android-sdk-7x` beta), `bugsee-flutter-sdk`, `bugsee-react-native-sdk`, `bugsee-unity-sdk`, `bugsee-dotnet-sdk`, `bugsee-xamarin-sdk`, `bugsee-cordova-sdk`, `bugsee-kmp-sdk`.
+`bugsee-sdk-setup` detects your platform and loads the right wizard: `bugsee-ios-sdk`, `bugsee-android-sdk` (7.x, the current Android SDK; `bugsee-android-sdk-6x` for the legacy 6.x line), `bugsee-flutter-sdk`, `bugsee-react-native-sdk`, `bugsee-unity-sdk`, `bugsee-dotnet-sdk`, `bugsee-xamarin-sdk`, `bugsee-cordova-sdk`, `bugsee-kmp-sdk`.
 
 ### Workflows
 

@@ -50,10 +50,10 @@ jobs:
           - skill: bugsee-ios-sdk
             repo: bugsee/spm                    # VERIFY (iOS SPM distribution)
           - skill: bugsee-android-sdk
-            repo: bugsee/bugsee-android         # VERIFY (private; stable skill reads the repo's default branch)
-          - skill: bugsee-android-sdk-7x
+            repo: bugsee/bugsee-android         # VERIFY (private; current skill tracks 7.x — the repo's default branch)
+          - skill: bugsee-android-sdk-6x
             repo: bugsee/bugsee-android         # VERIFY (private)
-            ref: "7.x"                          # VERIFY: 7.x branch/tag — MUST differ from the stable leg's default branch, else 7.x drifts against stable source
+            ref: "6.x"                          # VERIFY: 6.x maintenance branch/tag — MUST differ from the default branch, else 6.x drifts against 7.x source
           - skill: bugsee-flutter-sdk
             repo: bugsee/flutter-bugsee         # public
           - skill: bugsee-react-native-sdk

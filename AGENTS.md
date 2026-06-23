@@ -36,8 +36,8 @@ Every skill uses YAML frontmatter with `allowed-tools` — required by Cursor an
 | Platform | Skill |
 |---|---|
 | iOS / iPadOS | `bugsee-ios-sdk` |
-| Android | `bugsee-android-sdk` |
-| Android 7.x (Beta) | `bugsee-android-sdk-7x` |
+| Android (7.x, current) | `bugsee-android-sdk` |
+| Android 6.x (Legacy) | `bugsee-android-sdk-6x` |
 | Flutter | `bugsee-flutter-sdk` |
 | React Native | `bugsee-react-native-sdk` |
 | Unity | `bugsee-unity-sdk` |
