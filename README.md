@@ -62,7 +62,7 @@ See [`SKILL_TREE.md`](SKILL_TREE.md) for the full index.
 
 ## Bugsee MCP Server
 
-The plugin connects the Bugsee MCP server at `https://api.bugsee.com/mcp`. It exposes eleven tools across three families — applications, issues (`list_issues`, `get_issue`, `get_issue_resource`), and builds (`list_builds`, `list_latest_builds`, `get_build`, `get_build_by_commit`, `get_build_regressions`, `list_build_vulnerabilities`, `trigger_build_vuln_scan`) — plus the `/bugsee_fix` prompt. All are read-only except `trigger_build_vuln_scan`. Authenticate with OAuth 2.1 (recommended) or a personal access token (`https://api.bugsee.com/mcp/<token>`).
+The plugin connects the Bugsee MCP server at `https://api.bugsee.com/mcp`. It exposes tools across four families — applications (`list_applications`, `create_application`), issues (`list_issues`, `get_issue`, `get_issue_resource`), builds (`list_builds`, `list_latest_builds`, `get_build`, `get_build_by_commit`, `get_build_regressions`, `list_build_vulnerabilities`, `trigger_build_vuln_scan`), and symbols (`get_symbol_by_uuid`) — plus the `/bugsee_fix` prompt. All are read-only except `create_application` and `trigger_build_vuln_scan`. Authenticate with OAuth 2.1 (recommended) or a personal access token (`https://api.bugsee.com/mcp/<token>`).
 
 - MCP overview & tools: <https://docs.bugsee.com/mcp/>
 - Per-client setup: <https://docs.bugsee.com/mcp/configuration/>

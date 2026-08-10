@@ -90,4 +90,6 @@ Upload the IL2CPP/native symbols for the platform you build to (iOS dSYMs, Andro
 
 ## Verify
 
-After uploading, trigger a fresh crash on the matching build (or wait for the next real one) and confirm the trace in the Bugsee dashboard is fully symbolicated. If frames are still raw, the artifact's **version/build number didn't match** the shipped build — re-upload with the correct `-v`/build value.
+Use the Bugsee MCP tool **`get_symbol_by_uuid`** with the module / debug UUID from the unsymbolicated frame (optional `application_id_or_key` to scope to one app). An empty `symbols` array means either nothing is uploaded yet **or** matches exist only on apps the caller cannot read — it is not proof an upload is missing. Prefer scoping with `application_id_or_key` when you know the app. Entries in `uploading` / `processing` / `broken` explain a still-raw trace even when an upload was attempted; `ready` means the file is available for symbolication.
+
+After uploading, trigger a fresh crash on the matching build (or wait for the next real one) and confirm the trace in the Bugsee dashboard is fully symbolicated. If frames are still raw despite a `ready` symbol, the artifact's **version/build number didn't match** the shipped build — re-upload with the correct `-v`/build value.
