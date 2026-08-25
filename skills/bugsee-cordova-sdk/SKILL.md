@@ -52,11 +52,13 @@ ls platforms 2>/dev/null
 ## Phase 2: Install
 
 ```bash
-cordova plugin add com.bugsee.cordova-plugin --save
+cordova plugin add com.bugsee.cordova-plugin@7.0.1 --save
 
 # Optional: install device plugin for platform detection
 cordova plugin add cordova-plugin-device --save
 ```
+
+Current npm latest (re-verified 2026-08-25): **7.0.1**. Pin it rather than leaving the add unversioned.
 
 ---
 
@@ -84,7 +86,7 @@ document.addEventListener('deviceready', function() {
 
 > Replace the tokens with values from your Bugsee dashboard.
 
-> iOS/iPadOS: Since v7.0.0 the Bugsee iOS SDK supports the simulator; crash capture is excluded. For full functionality, use a real device.
+> iOS/iPadOS: Since v6.0.0 the Bugsee iOS SDK supports the simulator; crash capture is excluded. For full functionality, use a real device.
 
 ---
 

@@ -62,14 +62,13 @@ Every skill uses YAML frontmatter with `allowed-tools` — required by Cursor an
 
 ## MCP Server
 
-The Bugsee MCP server (base URL `https://api.bugsee.com/mcp`; OAuth 2.1/PKCE, or token URL `https://api.bugsee.com/mcp/<token>`) exposes tools across four families, plus the `/bugsee_fix` prompt:
+The Bugsee MCP server (base URL `https://api.bugsee.com/mcp`; OAuth 2.1/PKCE, or token URL `https://api.bugsee.com/mcp/<token>`) exposes tools across three families, plus the `/bugsee_fix` prompt:
 
-- **Applications:** `list_applications`, `create_application`
+- **Applications:** `list_applications`
 - **Issues:** `list_issues`, `get_issue`, `get_issue_resource`
 - **Builds:** `list_builds`, `list_latest_builds`, `get_build`, `get_build_by_commit`, `get_build_regressions`, `list_build_vulnerabilities`, `trigger_build_vuln_scan`
-- **Symbols:** `get_symbol_by_uuid`
 
-All are read-only except `create_application` and `trigger_build_vuln_scan` (queues a dependency-vulnerability scan; requires `modify` permission). Issue tools power `bugsee-fix-issues`; build tools power `bugsee-build-insights`; `get_symbol_by_uuid` helps diagnose `missing_sym` before/after upload. Tool reference: <https://docs.bugsee.com/mcp/usage/>. Configuration: <https://docs.bugsee.com/mcp/configuration/>.
+All are read-only except `trigger_build_vuln_scan` (queues a dependency-vulnerability scan; requires `modify` permission). Issue tools power `bugsee-fix-issues`; build tools power `bugsee-build-insights`. Tool reference: <https://docs.bugsee.com/mcp/usage/>. Configuration: <https://docs.bugsee.com/mcp/configuration/>.
 
 ## Skill Tree Navigation
 
