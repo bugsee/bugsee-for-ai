@@ -90,6 +90,12 @@ Upload the IL2CPP/native symbols for the platform you build to (iOS dSYMs, Andro
 
 ## Verify
 
-Use the Bugsee MCP tool **`get_symbol_by_uuid`** with the module / debug UUID from the unsymbolicated frame (optional `application_id_or_key` to scope to one app). An empty `symbols` array means either nothing is uploaded yet **or** matches exist only on apps the caller cannot read — it is not proof an upload is missing. Prefer scoping with `application_id_or_key` when you know the app. Entries in `uploading` / `processing` / `broken` explain a still-raw trace even when an upload was attempted; `ready` means the file is available for symbolication.
+The Bugsee MCP server has no symbols-lookup tool ([usage](https://docs.bugsee.com/mcp/usage/) — eleven tools across applications, issues, and builds). Confirm symbolication from a **new** crash on the matching build, not from a lookup of uploaded files.
 
-After uploading, trigger a fresh crash on the matching build (or wait for the next real one) and confirm the trace in the Bugsee dashboard is fully symbolicated. If frames are still raw despite a `ready` symbol, the artifact's **version/build number didn't match** the shipped build — re-upload with the correct `-v`/build value.
+1. **Match version/build.** The artifact you uploaded must belong to the binary that shipped. Bugsee matches an iOS crash to the dSYM of that build ([symbolication](https://docs.bugsee.com/sdk/ios/symbolication/)). CLI uploads record `--version` and `--build` on the symbol document; if the Android Gradle plugin embedded a build UUID, the mapping upload must use that same `--uuid` or the crash never resolves ([debug files](https://docs.bugsee.com/cli/debug-files/)). Source-map uploads take `-v/--app-version` the same way.
+
+2. **Trigger a fresh crash** on that build (or wait for the next real one). Existing issues keep the dump they were created with.
+
+3. **Dashboard.** Open the new issue at <https://app.bugsee.com> and confirm application frames show file, symbol, and line — not hex addresses, minified names, or `<unknown>`.
+
+4. **Issue tools.** With the MCP server connected, call `list_issues` (pass `version` when you know it) and then **`get_issue`** on the new issue key. Read the Exception section (add `include_all_threads: true` when you need the rest of the dump). Readable traces map to source; still-raw frames mean the version/build (or UUID) did not match — re-upload with the correct `-v` / `--version` / `--build` (and `--uuid` when required) and repeat from step 2.

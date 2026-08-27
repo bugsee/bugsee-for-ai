@@ -20,7 +20,7 @@ Opinionated wizard that scans your Flutter project and guides you through comple
 - User wants bug reporting, crash reporting, video recording, or network monitoring in Flutter
 - User mentions `bugsee_flutter`, Bugsee for Dart, or Bugsee Flutter plugin
 
-> **Note:** Always verify against [docs.bugsee.com/sdk/flutter/installation/](https://docs.bugsee.com/sdk/flutter/installation/) before implementing.
+> **Note:** Always verify against [docs.bugsee.com/sdk/flutter/installation/](https://docs.bugsee.com/sdk/flutter/installation/) before implementing. Install from **pub.dev** (`bugsee_flutter`). Do not add a git dependency on `github.com/bugsee/flutter-bugsee` — that repo is not the current package source.
 
 ---
 
@@ -58,8 +58,10 @@ Add to `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  bugsee_flutter: ^9.0.0
+  bugsee_flutter: ^9.0.4
 ```
+
+Current pub.dev latest (re-verified 2026-08-25): **9.0.4**. Docs still show `^8.0.0` — pin from the registry, not the installation page.
 
 Then run:
 

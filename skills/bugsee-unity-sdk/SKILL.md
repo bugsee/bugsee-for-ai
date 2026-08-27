@@ -50,7 +50,7 @@ grep -r "AndroidManifest" Assets/Plugins 2>/dev/null | head -3
 
 ## Phase 2: Install
 
-1. Download the latest [Bugsee.unitypackage](https://download.bugsee.com/sdk/unity/BugseeUnity-stable.unitypackage) (or see [all versions](https://docs.bugsee.com/sdk/unity/versions/))
+1. Download the latest [Bugsee.unitypackage](https://download.bugsee.com/sdk/unity/BugseeUnity-stable.unitypackage) (or see [all versions](https://docs.bugsee.com/sdk/unity/versions/)). Source repo: [github.com/bugsee/bugsee-unity](https://github.com/bugsee/bugsee-unity).
 
 2. Import the package in Unity: Assets > Import Package > Custom Package
 

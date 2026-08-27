@@ -54,10 +54,12 @@ find . -name "AppDelegate.cs" -o -name "MainApplication.cs" -o -name "MauiProgra
 Install via NuGet:
 
 ```bash
-dotnet add package Bugsee
+dotnet add package Bugsee --version 6.0.3
 ```
 
-Or in Visual Studio: right-click Dependencies > Manage NuGet Packages > search "Bugsee" > Install.
+Or in Visual Studio: right-click Dependencies > Manage NuGet Packages > search "Bugsee" > Install **6.0.3**.
+
+Current NuGet latest (re-verified 2026-08-25): **Bugsee 6.0.3**. Pin it; `dotnet add package Bugsee` without `--version` is acceptable only after confirming that still resolves to 6.0.3.
 
 ---
 

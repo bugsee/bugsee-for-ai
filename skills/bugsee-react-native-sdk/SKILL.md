@@ -55,8 +55,10 @@ ls App.js App.tsx index.js 2>/dev/null
 ### 1. Install the npm module
 
 ```bash
-npm install --save react-native-bugsee
+npm install --save react-native-bugsee@6.0.5
 ```
+
+Current npm latest (re-verified 2026-08-25): **6.0.5**. Pin the version; an unpinned `npm install` can silently resolve an older cache.
 
 ### 2. Prepare iOS project
 

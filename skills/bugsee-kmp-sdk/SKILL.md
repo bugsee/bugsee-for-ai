@@ -75,16 +75,18 @@ kotlin {
     cocoapods {
         // ... your existing cocoapods configuration
 
-        pod("Bugsee")
+        pod("Bugsee")  // native iOS SDK; trunk latest 6.3.2. CocoaPods publishing ends Aug 2026 — see the iOS skill for SPM/Carthage if you are not using the Kotlin CocoaPods plugin.
     }
 
     sourceSets {
         commonMain.dependencies {
-            implementation("com.bugsee:bugsee-kotlin-multiplatform:+")
+            implementation("com.bugsee:bugsee-kotlin-multiplatform:0.1.2")
         }
     }
 }
 ```
+
+Current Maven latest (re-verified 2026-08-25): **0.1.2**. Pin that version — docs still show `+`, which the KMP installation page itself warns against (`Pin your dependency to a specific version rather than using a floating range`).
 
 > **Note:** The CocoaPods integration approach can't be used together with the `embedAndSignAppleFrameworkForXcode` mechanism used for direct integration. See [Kotlin CocoaPods overview](https://kotlinlang.org/docs/multiplatform/multiplatform-cocoapods-overview.html#set-up-an-environment-to-work-with-cocoapods).
 
@@ -139,8 +141,9 @@ Add `Bugsee.launch()` in your `ComposeUIViewController` entry point:
 import androidx.compose.ui.window.ComposeUIViewController
 import com.bugsee.kmp.Bugsee
 import com.bugsee.kmp.BugseeLaunchOptions
+import platform.UIKit.UIViewController
 
-fun MainViewController() = ComposeUIViewController {
+fun MainViewController(): UIViewController {
     val options = BugseeLaunchOptions()
     options.monitorNetwork = true
     options.captureLogs = true
@@ -149,7 +152,9 @@ fun MainViewController() = ComposeUIViewController {
     options.shakeToReport = true
     Bugsee.launch("<your_app_token>", options)
 
-    App()
+    return ComposeUIViewController {
+        App()
+    }
 }
 ```
 
@@ -199,13 +204,13 @@ For readable stack traces from release builds, upload platform debug symbols. Th
 
 ### Android
 
-In a typical KMP/Compose Multiplatform project, wire the Bugsee Gradle plugin into `composeApp/build.gradle.kts`:
+In a typical KMP/Compose Multiplatform project, wire the Bugsee Gradle plugin into `composeApp/build.gradle.kts`. Pin plugin **4.0.6**; if the Android target also ships `com.bugsee:bugsee-android`, pair it with **7.1.4+** (the [4.0.6 Compose launch crash fix](https://docs.bugsee.com/sdk/android/gradle-plugin/releases/) requires that SDK). See [`bugsee-android-sdk`](../bugsee-android-sdk/SKILL.md).
 
 ```kotlin
 // gradle/libs.versions.toml
 //
 // [versions]
-// bugseeGradle = "4+"
+// bugseeGradle = "4.0.6"
 //
 // [plugins]
 // bugsee-gradle-plugin = { id = "com.bugsee.android.gradle", version.ref = "bugseeGradle" }

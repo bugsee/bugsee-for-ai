@@ -61,8 +61,10 @@ In Visual Studio: right-click project > Add > Add NuGet Packages > search "Bugse
 Or via CLI:
 
 ```bash
-nuget install Bugsee
+nuget install Bugsee -Version 6.0.3
 ```
+
+Current NuGet latest (re-verified 2026-08-25): **Bugsee 6.0.3** (same package as .NET / MAUI).
 
 > Install the Bugsee package in each platform-specific project (iOS and Android), not the shared/PCL project.
 
