@@ -28,13 +28,15 @@ Point Cursor at this repository — skills and the MCP config live at the repo r
 
 This repo is also a Codex plugin (`.codex-plugin/plugin.json`). Codex auto-discovers the skills from `./skills` and the Bugsee MCP server from `./.mcp.json`.
 
-- **Skills:** point Codex at this repository, or install individual skills into `~/.codex/skills/`, e.g.:
+- **Skills:** point Codex at this repository, or install individual skills into `~/.codex/skills/` from this repo, e.g.:
 
   ```bash
   mkdir -p ~/.codex/skills/bugsee-ios-sdk
   curl -o ~/.codex/skills/bugsee-ios-sdk/SKILL.md \
-    https://docs.bugsee.com/ai/agent-skills/sdk/ios/SKILL.md
+    https://raw.githubusercontent.com/bugsee/bugsee-for-ai/main/skills/bugsee-ios-sdk/SKILL.md
   ```
+
+  Other platforms use the matching `skills/bugsee-*-sdk/SKILL.md` path. Do not install from `https://docs.bugsee.com/ai/agent-skills/` — those published copies currently lag this plugin and must not be used for version pins or the iOS SPM URL.
 
 - **MCP:** installing the plugin wires the Bugsee MCP via `.mcp.json`. To add it manually, configure `mcp_servers` in `~/.codex/config.toml` per the [Codex MCP docs](https://developers.openai.com/codex).
 

@@ -10,7 +10,11 @@ crashes and bug reports via the Bugsee MCP server, and keep stack traces readabl
 
 When installed as a Claude Code or Cursor plugin, the SDK and workflow skills are
 bundled locally and loaded on demand by the router skills below. Standalone, fetch
-the canonical SDK skills from `https://docs.bugsee.com/ai/agent-skills/`.
+skills from this repository, e.g.
+`https://raw.githubusercontent.com/bugsee/bugsee-for-ai/main/skills/bugsee-ios-sdk/SKILL.md`
+(and the matching `skills/bugsee-*-sdk/` paths). Do not prefer
+`https://docs.bugsee.com/ai/agent-skills/` — those published copies currently lag
+this plugin and must not be used for version pins or the iOS SPM URL.
 
 ## Entry Points
 

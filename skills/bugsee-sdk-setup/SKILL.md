@@ -17,11 +17,11 @@ Set up Bugsee bug reporting, crash reporting, video recording, and network monit
 Each SDK skill is a complete, opinionated setup wizard. Read the whole skill before acting — these files are detailed and fetch tools often summarize them, losing steps that matter.
 
 - **Installed as a plugin (Claude Code / Cursor):** the SDK skills are bundled locally. Open the skill linked in the **Skill** column below and follow it.
-- **Standalone / other agents:** download the full skill with `curl` from the docs, then read and follow it:
+- **Standalone / other agents:** download the full skill with `curl` from this repository, then read and follow it:
 
-      curl -sL https://docs.bugsee.com/ai/agent-skills/sdk/ios/SKILL.md
+      curl -sL https://raw.githubusercontent.com/bugsee/bugsee-for-ai/main/skills/bugsee-ios-sdk/SKILL.md
 
-  Append the path from the **Online docs** column. Do not guess or shorten URLs.
+  Use the matching `skills/bugsee-*-sdk/SKILL.md` path from the **Standalone path** column. Do not fetch from `https://docs.bugsee.com/ai/agent-skills/` — those published copies currently lag this plugin and must not be used for version pins or the iOS SPM URL.
 
 ## Start Here — Read This Before Doing Anything
 
@@ -37,20 +37,20 @@ Each SDK skill contains its own detection logic, prerequisites, and step-by-step
 
 ## SDK Skills
 
-| Platform | Skill | Online docs |
+| Platform | Skill | Standalone path |
 |---|---|---|
-| iOS / iPadOS (Swift, Objective-C) | [`bugsee-ios-sdk`](../bugsee-ios-sdk/SKILL.md) | `sdk/ios/SKILL.md` |
-| Android (Kotlin, Java) | [`bugsee-android-sdk`](../bugsee-android-sdk/SKILL.md) | `sdk/android/SKILL.md` |
-| Android 6.x (Legacy) | [`bugsee-android-sdk-6x`](../bugsee-android-sdk-6x/SKILL.md) | `sdk/android/v6/SKILL.md` |
-| Flutter / Dart | [`bugsee-flutter-sdk`](../bugsee-flutter-sdk/SKILL.md) | `sdk/flutter/SKILL.md` |
-| React Native | [`bugsee-react-native-sdk`](../bugsee-react-native-sdk/SKILL.md) | `sdk/react-native/SKILL.md` |
-| Unity | [`bugsee-unity-sdk`](../bugsee-unity-sdk/SKILL.md) | `sdk/unity/SKILL.md` |
-| .NET / MAUI | [`bugsee-dotnet-sdk`](../bugsee-dotnet-sdk/SKILL.md) | `sdk/dotnet/SKILL.md` |
-| Xamarin | [`bugsee-xamarin-sdk`](../bugsee-xamarin-sdk/SKILL.md) | `sdk/xamarin/SKILL.md` |
-| Cordova | [`bugsee-cordova-sdk`](../bugsee-cordova-sdk/SKILL.md) | `sdk/cordova/SKILL.md` |
-| Kotlin Multiplatform (KMP) | [`bugsee-kmp-sdk`](../bugsee-kmp-sdk/SKILL.md) | `sdk/kmp/SKILL.md` |
+| iOS / iPadOS (Swift, Objective-C) | [`bugsee-ios-sdk`](../bugsee-ios-sdk/SKILL.md) | `skills/bugsee-ios-sdk/SKILL.md` |
+| Android (Kotlin, Java) | [`bugsee-android-sdk`](../bugsee-android-sdk/SKILL.md) | `skills/bugsee-android-sdk/SKILL.md` |
+| Android 6.x (Legacy) | [`bugsee-android-sdk-6x`](../bugsee-android-sdk-6x/SKILL.md) | `skills/bugsee-android-sdk-6x/SKILL.md` |
+| Flutter / Dart | [`bugsee-flutter-sdk`](../bugsee-flutter-sdk/SKILL.md) | `skills/bugsee-flutter-sdk/SKILL.md` |
+| React Native | [`bugsee-react-native-sdk`](../bugsee-react-native-sdk/SKILL.md) | `skills/bugsee-react-native-sdk/SKILL.md` |
+| Unity | [`bugsee-unity-sdk`](../bugsee-unity-sdk/SKILL.md) | `skills/bugsee-unity-sdk/SKILL.md` |
+| .NET / MAUI | [`bugsee-dotnet-sdk`](../bugsee-dotnet-sdk/SKILL.md) | `skills/bugsee-dotnet-sdk/SKILL.md` |
+| Xamarin | [`bugsee-xamarin-sdk`](../bugsee-xamarin-sdk/SKILL.md) | `skills/bugsee-xamarin-sdk/SKILL.md` |
+| Cordova | [`bugsee-cordova-sdk`](../bugsee-cordova-sdk/SKILL.md) | `skills/bugsee-cordova-sdk/SKILL.md` |
+| Kotlin Multiplatform (KMP) | [`bugsee-kmp-sdk`](../bugsee-kmp-sdk/SKILL.md) | `skills/bugsee-kmp-sdk/SKILL.md` |
 
-Online docs paths are relative to `https://docs.bugsee.com/ai/agent-skills/`.
+Standalone paths are relative to `https://raw.githubusercontent.com/bugsee/bugsee-for-ai/main/`. Do not use `https://docs.bugsee.com/ai/agent-skills/` until those copies are synced.
 
 ### Platform Detection Priority
 
