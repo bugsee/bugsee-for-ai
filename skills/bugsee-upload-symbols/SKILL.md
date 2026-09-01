@@ -36,26 +36,29 @@ When minification/obfuscation is enabled, upload the `mapping.txt`. The **Bugsee
 - Gradle plugin: <https://docs.bugsee.com/sdk/android/gradle-plugin/>
 - Apply `id("com.bugsee.android.gradle")` and set the app token in the `bugsee { }` DSL via `appToken("<your-app-token>")`.
 
-## React Native — JavaScript source maps (`bugsee-sourcemaps`)
+## React Native — JavaScript source maps
 
-Use the `bugsee-sourcemaps` CLI to generate and upload JS source maps so JS frames symbolicate.
-
-```bash
-npm install -g bugsee-sourcemaps      # or: yarn global add bugsee-sourcemaps
-```
-
-`make` (generate + upload), `generate`, and `upload` are the available commands. Key options: `-t/--app-token` (required), `-v/--app-version`, `-p/--platform` (`ios` or `android`), `-c/--configuration` (`debug`/`release` — required for `upload`), `-s/--source-map` + `-b/--bundle` (paths, for `upload`), `-o/--overwrite`.
+Use a **pinned** Bugsee CLI to inject debug IDs and upload JS source maps so JS frames symbolicate. Current npm latest (re-verified 2026-09-01): **`@bugsee/bugsee-cli@0.7.5`** (binary `bugsee-cli`).
 
 ```bash
-# Generate and upload for both configs of one platform:
-bugsee-sourcemaps make -t <APP_TOKEN> -p ios -v 1.2.3 ./
-
-# Upload a source map/bundle you already produced:
-bugsee-sourcemaps upload -t <APP_TOKEN> -p android -c release \
-  -s ./android-release.map -b ./android-release.bundle -v 1.2.3 ./
+npm install -g @bugsee/bugsee-cli@0.7.5
 ```
 
-- Docs: <https://docs.bugsee.com/tools/sourcemaps/>
+Token via `BUGSEE_APP_TOKEN` or `--app-token`. Inject after the bundler writes bundles and `.map` files, then upload:
+
+```bash
+export BUGSEE_APP_TOKEN="<APP_TOKEN>"
+
+# 1. Inject debug IDs into the build output
+bugsee-cli sourcemaps inject ./dist
+
+# 2. Upload the injected source maps
+bugsee-cli debug-files upload ./dist --type sourcemaps --version 1.2.3 --build 123
+```
+
+- CLI source maps: <https://docs.bugsee.com/cli/sourcemaps/>
+- Debug-file uploads (including `--uuid` when the Gradle plugin owned the build UUID): <https://docs.bugsee.com/cli/debug-files/>
+- The React Native SDK can also upload during native builds via the `bugsee-sourcemaps` helper (`make` / `generate` / `upload`) — see <https://docs.bugsee.com/sdk/react_native/crashes/>. That helper ships as a `react-native-bugsee` devDependency; do not `npm install -g bugsee-sourcemaps` unpinned.
 - iOS and Android native frames in a React Native app still need dSYMs / mapping files — see the sections above.
 
 ## Flutter — symbolication
@@ -92,10 +95,10 @@ Upload the IL2CPP/native symbols for the platform you build to (iOS dSYMs, Andro
 
 The Bugsee MCP server has no symbols-lookup tool ([usage](https://docs.bugsee.com/mcp/usage/) — eleven tools across applications, issues, and builds). Confirm symbolication from a **new** crash on the matching build, not from a lookup of uploaded files.
 
-1. **Match version/build.** The artifact you uploaded must belong to the binary that shipped. Bugsee matches an iOS crash to the dSYM of that build ([symbolication](https://docs.bugsee.com/sdk/ios/symbolication/)). CLI uploads record `--version` and `--build` on the symbol document; if the Android Gradle plugin embedded a build UUID, the mapping upload must use that same `--uuid` or the crash never resolves ([debug files](https://docs.bugsee.com/cli/debug-files/)). Source-map uploads take `-v/--app-version` the same way.
+1. **Match version/build.** The artifact you uploaded must belong to the binary that shipped. Bugsee matches an iOS crash to the dSYM of that build ([symbolication](https://docs.bugsee.com/sdk/ios/symbolication/)). CLI uploads (`bugsee-cli` from `@bugsee/bugsee-cli@0.7.5`) record `--version` and `--build` on the symbol document — including `--type sourcemaps`. If the Android Gradle plugin embedded a build UUID, the mapping upload must use that same `--uuid` or the crash never resolves ([debug files](https://docs.bugsee.com/cli/debug-files/)).
 
 2. **Trigger a fresh crash** on that build (or wait for the next real one). Existing issues keep the dump they were created with.
 
 3. **Dashboard.** Open the new issue at <https://app.bugsee.com> and confirm application frames show file, symbol, and line — not hex addresses, minified names, or `<unknown>`.
 
-4. **Issue tools.** With the MCP server connected, call `list_issues` (pass `version` when you know it) and then **`get_issue`** on the new issue key. Read the Exception section (add `include_all_threads: true` when you need the rest of the dump). Readable traces map to source; still-raw frames mean the version/build (or UUID) did not match — re-upload with the correct `-v` / `--version` / `--build` (and `--uuid` when required) and repeat from step 2.
+4. **Issue tools.** With the MCP server connected, call `list_issues` (pass `version` when you know it) and then **`get_issue`** on the new issue key. Read the Exception section (add `include_all_threads: true` when you need the rest of the dump). Readable traces map to source; still-raw frames mean the version/build (or UUID) did not match — re-upload with the correct `--version` / `--build` (and `--uuid` when required) and repeat from step 2.

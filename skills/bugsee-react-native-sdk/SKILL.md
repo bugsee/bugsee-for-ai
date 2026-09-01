@@ -81,6 +81,7 @@ After installing the module, perform a Gradle Sync. No additional manual configu
 Add Bugsee launch to your main `App.js` or `App.tsx`:
 
 ```javascript
+import React from 'react';
 import Bugsee from 'react-native-bugsee';
 import { Platform } from 'react-native';
 
@@ -111,8 +112,9 @@ export default class App extends React.Component {
 For functional components:
 
 ```javascript
+import { useEffect } from 'react';
 import Bugsee from 'react-native-bugsee';
-import { Platform, useEffect } from 'react-native';
+import { Platform } from 'react-native';
 
 function App() {
   useEffect(() => {

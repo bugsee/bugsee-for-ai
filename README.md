@@ -22,7 +22,7 @@ This enables the Bugsee skills and connects the Bugsee MCP server.
 
 ### Cursor
 
-Point Cursor at this repository — skills and the MCP config live at the repo root. For MCP specifically, you can also follow the per-client setup at [docs.bugsee.com/mcp/configuration](https://docs.bugsee.com/mcp/configuration/).
+Point Cursor at this repository — skills and the MCP config live at the repo root. For MCP specifically, you can also follow the per-client setup at [docs.bugsee.com/mcp/configuration/](https://docs.bugsee.com/mcp/configuration/).
 
 ### OpenAI Codex
 
