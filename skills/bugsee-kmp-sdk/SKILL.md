@@ -75,7 +75,7 @@ kotlin {
     cocoapods {
         // ... your existing cocoapods configuration
 
-        pod("Bugsee")  // native iOS SDK; trunk latest 6.3.2. CocoaPods publishing ends Aug 2026 — see the iOS skill for SPM/Carthage if you are not using the Kotlin CocoaPods plugin.
+        pod("Bugsee")  // native iOS SDK; trunk latest 6.3.2. CocoaPods trunk becomes read-only on December 2, 2026 — see the iOS skill for SPM/Carthage if you are not using the Kotlin CocoaPods plugin.
     }
 
     sourceSets {
