@@ -73,7 +73,7 @@ grep -r "@main" --include="*.swift" 2>/dev/null | head -3
 
 ## Phase 2: Install
 
-Choose one method based on the detected dependency manager. **Prefer SPM or Carthage for new installs.** CocoaPods trunk publishing is ending in August 2026; keep the CocoaPods path for existing `Podfile` projects (6.3.2 is already on trunk).
+Choose one method based on the detected dependency manager. **Prefer SPM or Carthage for new installs.** CocoaPods trunk is scheduled to become read-only on **December 2, 2026** (test window November 1–7, 2026 per [the CocoaPods blog](https://blog.cocoapods.org/CocoaPods-Specs-Repo/)); existing Pod installs and the CDN continue to work. Keep the CocoaPods path for existing `Podfile` projects (6.3.2 is already on trunk).
 
 ### Swift Package Manager (recommended)
 
@@ -100,7 +100,7 @@ Drag `Bugsee.xcframework` from `Carthage/Build` into your target's "Frameworks, 
 
 ### CocoaPods (existing Podfile projects)
 
-CocoaPods trunk is shutting down publishing in August 2026. Prefer SPM or Carthage for new integrations. If the project already uses CocoaPods, add to `Podfile`:
+CocoaPods trunk is scheduled to become read-only on **December 2, 2026** (test window November 1–7, 2026). Existing Pod installs and the CDN continue to work; only new Podspec publishes stop. Prefer SPM or Carthage for new integrations. If the project already uses CocoaPods, add to `Podfile`:
 
 ```ruby
 pod 'Bugsee', '6.3.2'
