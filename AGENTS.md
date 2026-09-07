@@ -62,13 +62,14 @@ Every skill uses YAML frontmatter with `allowed-tools` — required by Cursor an
 
 ## MCP Server
 
-The Bugsee MCP server (base URL `https://api.bugsee.com/mcp`; OAuth 2.1/PKCE, or token URL `https://api.bugsee.com/mcp/<token>`) exposes tools across three families, plus the `/bugsee_fix` prompt:
+The Bugsee MCP server (base URL `https://api.bugsee.com/mcp`; OAuth 2.1/PKCE, or token URL `https://api.bugsee.com/mcp/<token>`) exposes thirteen tools across four families, plus the `/bugsee_fix` prompt:
 
-- **Applications:** `list_applications`
+- **Applications:** `list_applications`, `create_application` (mutating; needs `mcp:write` + org admin or `app_create`)
 - **Issues:** `list_issues`, `get_issue`, `get_issue_resource`
-- **Builds:** `list_builds`, `list_latest_builds`, `get_build`, `get_build_by_commit`, `get_build_regressions`, `list_build_vulnerabilities`, `trigger_build_vuln_scan`
+- **Builds:** `list_builds`, `list_latest_builds`, `get_build`, `get_build_by_commit`, `get_build_regressions`, `list_build_vulnerabilities`, `trigger_build_vuln_scan` (mutating; needs `modify`)
+- **Symbols:** `get_symbol_by_uuid` (diagnose missing/processing/broken symbols by module UUID)
 
-All are read-only except `trigger_build_vuln_scan` (queues a dependency-vulnerability scan; requires `modify` permission). Issue tools power `bugsee-fix-issues`; build tools power `bugsee-build-insights`. Tool reference: <https://docs.bugsee.com/mcp/usage/>. Configuration: <https://docs.bugsee.com/mcp/configuration/>.
+Two mutating tools total: `create_application` and `trigger_build_vuln_scan`. All others are read-only. Issue tools power `bugsee-fix-issues`; build tools power `bugsee-build-insights`; `get_symbol_by_uuid` supports diagnosis in `bugsee-upload-symbols` and `bugsee-fix-issues`. Unsymbolicated issues from `list_issues` carry `symbolication_status` (`ready` / `missing_sym`) and often an empty `key` — pass `issue_id` to `get_issue` / `get_issue_resource` in that case. Tool reference: <https://docs.bugsee.com/mcp/usage/>. Configuration: <https://docs.bugsee.com/mcp/configuration/>.
 
 ## Skill Tree Navigation
 
