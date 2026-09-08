@@ -26,7 +26,7 @@ For crash/error/bug-report debugging, use [`bugsee-fix-issues`](../bugsee-fix-is
 
 ## Prerequisites: the Bugsee MCP Server
 
-Needs the Bugsee MCP server connected (base URL `https://api.bugsee.com/mcp`). The build tools are read-only **except** `trigger_build_vuln_scan`, which queues a scan and requires `modify` permission on the application. If the tools aren't available, connect the server with OAuth, or the token URL `https://api.bugsee.com/mcp/<token>` — see [MCP configuration](https://docs.bugsee.com/mcp/configuration/).
+Needs the Bugsee MCP server connected (base URL `https://api.bugsee.com/mcp`). The build tools are read-only **except** `trigger_build_vuln_scan`, which queues a scan and requires `modify` permission on the application. The server's other mutating tool is `create_application` (applications family; needs `mcp:write` plus org admin or `app_create`) and is not used by this skill. If the tools aren't available, connect the server with OAuth, or the token URL `https://api.bugsee.com/mcp/<token>` — see [MCP configuration](https://docs.bugsee.com/mcp/configuration/).
 
 ## The build tools
 
