@@ -204,7 +204,7 @@ For readable stack traces from release builds, upload platform debug symbols. Th
 
 ### Android
 
-In a typical KMP/Compose Multiplatform project, wire the Bugsee Gradle plugin into `composeApp/build.gradle.kts`. Pin plugin **4.0.6**; if the Android target also ships `com.bugsee:bugsee-android`, pair it with **7.1.4+** (the [4.0.6 Compose launch crash fix](https://docs.bugsee.com/sdk/android/gradle-plugin/releases/) requires that SDK). See [`bugsee-android-sdk`](../bugsee-android-sdk/SKILL.md).
+In a typical KMP/Compose Multiplatform project, wire the Bugsee Gradle plugin into `composeApp/build.gradle.kts`. Pin plugin **4.0.6**; if the Android target also ships `com.bugsee:bugsee-android`, pair it with **7.2.0+** (the [4.0.6 Compose launch crash fix](https://docs.bugsee.com/sdk/android/gradle-plugin/releases/) requires SDK 7.1.4+; 7.2.0 satisfies that). See [`bugsee-android-sdk`](../bugsee-android-sdk/SKILL.md).
 
 ```kotlin
 // gradle/libs.versions.toml
