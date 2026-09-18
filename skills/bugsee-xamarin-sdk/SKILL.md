@@ -143,6 +143,16 @@ Build and run on a device. The Bugsee floating button should appear. Tap it to f
 
 ---
 
+## Debug Symbols
+
+Upload the symbol files for the release build so managed and native frames resolve — and the platform's native symbols (iOS dSYMs, Android R8 mapping) alongside them, or the native half of a trace stays raw.
+
+The [Bugsee CLI](../bugsee-cli/SKILL.md) handles every format from a CI script.
+
+Full workflow: [`bugsee-upload-symbols`](../bugsee-upload-symbols/SKILL.md) · [Xamarin symbolication](https://docs.bugsee.com/sdk/xamarin/symbolication/).
+
+---
+
 ## Documentation Links
 
 - [Installation](https://docs.bugsee.com/sdk/xamarin/installation/)

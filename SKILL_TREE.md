@@ -48,6 +48,7 @@ Debug Bugsee issues and keep crash reports readable.
 | Skill | What it does |
 |---|---|
 | [`bugsee-build-insights`](skills/bugsee-build-insights/SKILL.md) | Inspect builds and catch regressions with the Bugsee MCP server — app/install size, dependency changes, build timings, and dependency vulnerabilities (SCA). |
+| [`bugsee-cli`](skills/bugsee-cli/SKILL.md) | Reference for the Bugsee CLI (`bugsee-cli`) — the single binary that uploads debug symbols, source maps, and build artefacts, and resolves build metadata in CI. |
 | [`bugsee-fix-issues`](skills/bugsee-fix-issues/SKILL.md) | Triage and fix Bugsee crashes, errors, memory/thread leaks, and bug reports using the Bugsee MCP server. |
 | [`bugsee-upload-symbols`](skills/bugsee-upload-symbols/SKILL.md) | Make Bugsee stack traces readable by uploading debug symbols, source maps, and mapping files. |
 

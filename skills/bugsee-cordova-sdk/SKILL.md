@@ -122,6 +122,25 @@ The Bugsee floating button should appear. Tap it to file a test bug report, then
 
 ---
 
+## Debug Symbols
+
+A Cordova crash can land in the web layer or the native one, and each needs its own symbols.
+
+**JavaScript — source maps**, via the [Bugsee CLI](../bugsee-cli/SKILL.md):
+
+```bash
+npm i -D @bugsee/cli@0.7.10
+npx bugsee-cli sourcemaps inject <build-output-dir>
+npx bugsee-cli debug-files upload <build-output-dir> --type sourcemaps \
+    --version 1.4.0 --build 1400
+```
+
+Point both at whatever directory the web build emits its bundles and `.map` files into. `inject` must run after the bundler and before the upload, on the same output.
+
+**Native.** iOS needs dSYMs, Android the R8/ProGuard mapping — see [`bugsee-upload-symbols`](../bugsee-upload-symbols/SKILL.md) for both.
+
+---
+
 ## Documentation Links
 
 - [Installation](https://docs.bugsee.com/sdk/cordova/installation/)

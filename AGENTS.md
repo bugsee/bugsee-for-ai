@@ -9,6 +9,8 @@ Guidance for AI coding assistants working **in this repository** (authoring and 
 - **Skills** — opinionated wizards that install and configure Bugsee SDKs, debug Bugsee issues, and upload symbols.
 - **MCP server** — the Bugsee MCP at `https://api.bugsee.com/mcp`, declared inline in the Claude plugin manifest and in the repo-root `.mcp.json` (auto-discovered by Cursor), so issue context is available to the assistant.
 
+Symbol upload and build-time metadata run through [`bugsee-cli`](https://docs.bugsee.com/cli/), one cross-platform binary that every Bugsee build integration shells out to. The `bugsee-cli` skill is its reference; verify any command or flag against `bugsee-cli <command> --help`, which is authoritative for an installed version — the docs site trails the binary.
+
 ## Plugin Structure
 
 ```
@@ -53,6 +55,7 @@ Every skill uses YAML frontmatter with `allowed-tools` — required by Cursor an
 | `bugsee-fix-issues` | Triage and fix crashes/errors/bug reports via the Bugsee MCP server |
 | `bugsee-build-insights` | Inspect builds for size/dependency/timing regressions and dependency vulnerabilities via the Bugsee MCP server |
 | `bugsee-upload-symbols` | Upload dSYMs, source maps, and mapping files for readable traces |
+| `bugsee-cli` | Reference for the `bugsee-cli` binary — install channels, commands, version floors, exit codes |
 
 ### Internal
 
