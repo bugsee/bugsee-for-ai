@@ -180,6 +180,16 @@ You should see the Bugsee floating button. Tap it to file a test bug report, the
 
 ---
 
+## Debug Symbols
+
+A Flutter release obfuscates Dart symbols, and the platform layers below it are stripped separately. Upload the Dart split debug info **and** the native symbols — iOS dSYMs, Android R8 mapping and ELF — or half the trace stays raw.
+
+The Flutter integration downloads and invokes the [Bugsee CLI](../bugsee-cli/SKILL.md) for the upload; you can also run it directly from CI.
+
+Full workflow: [`bugsee-upload-symbols`](../bugsee-upload-symbols/SKILL.md) · [Flutter symbolication](https://docs.bugsee.com/sdk/flutter/symbolication/).
+
+---
+
 ## Documentation Links
 
 - [Installation](https://docs.bugsee.com/sdk/flutter/installation/)

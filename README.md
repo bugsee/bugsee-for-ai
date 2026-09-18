@@ -8,6 +8,7 @@ The official Bugsee plugin for AI coding assistants. It teaches Claude Code, Cur
 - **Fix issues from Bugsee** — pull a crash, error, or bug report's full context (stack trace, breadcrumbs, network, logs) into your editor and root-cause it against your code.
 - **Track build health** — check build size, what a release added or removed, size/dependency/timing regressions, and dependency vulnerabilities.
 - **Keep traces readable** — upload dSYMs, JavaScript source maps, Android mapping files, and other symbols so production stack traces resolve to your source.
+- **Run build-time uploads from CI** — install and drive `bugsee-cli`, the single binary every Bugsee build integration shells out to, from any build script or CI job.
 
 ## Installation
 
@@ -59,6 +60,7 @@ Clone the repository and load it as a local plugin/marketplace in your assistant
 - `bugsee-fix-issues` — triage and fix crashes/errors/bug reports using the Bugsee MCP server.
 - `bugsee-build-insights` — inspect builds for size/dependency/timing regressions and dependency vulnerabilities via the Bugsee MCP server.
 - `bugsee-upload-symbols` — upload dSYMs, source maps, and mapping files.
+- `bugsee-cli` — install, invoke, and troubleshoot the [Bugsee CLI](https://docs.bugsee.com/cli/): commands, flags, version floors, exit codes.
 
 See [`SKILL_TREE.md`](SKILL_TREE.md) for the full index.
 

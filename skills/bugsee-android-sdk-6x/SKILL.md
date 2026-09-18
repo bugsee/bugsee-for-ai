@@ -206,6 +206,23 @@ Check the Bugsee dashboard for the incoming report.
 
 ---
 
+## Debug Symbols
+
+The 6.x line has **no Gradle plugin**, so an obfuscated release build uploads its `mapping.txt` through the [Bugsee CLI](../bugsee-cli/SKILL.md) (or the dashboard's manual upload):
+
+```bash
+bugsee-cli debug-files upload ./app/build/outputs/mapping/release \
+    --version 1.4.0 --build 1400
+```
+
+`--version` / `--build` must match the shipped build — a mismatch uploads a mapping that is accepted and then never resolves a crash. Native NDK symbols go up with `--type elf` and a `--uuid` matching what the SDK reports.
+
+Upgrading to 7.x replaces this step with the Gradle plugin, which uploads on every release build automatically.
+
+Full workflow: [`bugsee-upload-symbols`](../bugsee-upload-symbols/SKILL.md).
+
+---
+
 ## Documentation Links
 
 - [Installation (6.x)](https://docs.bugsee.com/sdk/android/v6/installation/)

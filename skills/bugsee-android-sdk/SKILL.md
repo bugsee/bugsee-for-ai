@@ -360,6 +360,23 @@ Check the Bugsee dashboard for the incoming report. If APM is enabled, hit a few
 
 ---
 
+## Debug Symbols
+
+The Bugsee Gradle plugin applied in Phase 2 already uploads the R8/ProGuard `mapping.txt` on each release build, and NDK symbols when `ndk { enabled.set(true) }` is set. **For a Gradle project that is the whole answer** — nothing else to wire.
+
+Outside Gradle — a prebuilt APK, or a CI job that only has the artifacts — upload with the [Bugsee CLI](../bugsee-cli/SKILL.md):
+
+```bash
+bugsee-cli debug-files upload ./app/build/outputs/mapping/release \
+    --version 1.4.0 --build 1400
+```
+
+`--version` / `--build` must match the shipped build, or the symbol is accepted and never resolves a crash.
+
+Full workflow: [`bugsee-upload-symbols`](../bugsee-upload-symbols/SKILL.md) · [Gradle plugin](https://docs.bugsee.com/sdk/android/gradle-plugin/).
+
+---
+
 ## Documentation Links
 
 - [Installation](https://docs.bugsee.com/sdk/android/installation/)

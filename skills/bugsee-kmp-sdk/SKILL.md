@@ -200,7 +200,7 @@ Full options: [docs.bugsee.com/sdk/kmp/configuration/](https://docs.bugsee.com/s
 
 ## Phase 5: Debug symbols (Production builds)
 
-For readable stack traces from release builds, upload platform debug symbols. There is no KMP-specific upload tool — follow the native workflows on each platform.
+For readable stack traces from release builds, upload platform debug symbols. There is no KMP-specific upload tool — follow the native workflows on each platform. Both run on the [Bugsee CLI](../bugsee-cli/SKILL.md) underneath, so a CI job without Gradle or Xcode can invoke it directly.
 
 ### Android
 
@@ -246,6 +246,8 @@ Add a `Run Script` build phase to the **Post-actions** stage of your **iosApp** 
 Set `DEBUG_INFORMATION_FORMAT` to `dwarf-with-dsym` for the configurations you want to symbolicate. When using the Kotlin CocoaPods plugin, apply this in the Podfile `post_install` hook so all pods (including the Bugsee pod) produce dSYMs.
 
 Full instructions and the BugseeAgent script: [docs.bugsee.com/sdk/kmp/debug-symbols/](https://docs.bugsee.com/sdk/kmp/debug-symbols/).
+
+If editing `.xcscheme` XML is awkward — a generated `iosApp` project, or a CI-only setup — `bugsee-cli xcode upload-dsyms` (CLI 0.7.7+) does the dSYM upload from an ordinary **Run Script build phase** instead, with no build registration. See [`bugsee-upload-symbols`](../bugsee-upload-symbols/SKILL.md) for both shapes and their failure policies.
 
 ---
 

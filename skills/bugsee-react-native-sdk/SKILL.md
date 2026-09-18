@@ -166,6 +166,38 @@ You should see the Bugsee floating button. Tap it to file a test bug report, the
 
 ---
 
+## Debug Symbols
+
+A React Native crash has **two layers**, and each needs its own symbols. Uploading only one leaves half the trace raw.
+
+**JavaScript — source maps.** The `bugsee-sourcemaps` npm tool is the documented React Native path and still the safe default:
+
+It ships as a `react-native-bugsee` devDependency — **do not install it globally unpinned**:
+
+```bash
+npx bugsee-sourcemaps make -t <APP_TOKEN> -p ios -v 1.2.3 ./
+```
+
+See [React Native crashes](https://docs.bugsee.com/sdk/react_native/crashes/) and [docs.bugsee.com/tools/sourcemaps](https://docs.bugsee.com/tools/sourcemaps/).
+
+The [Bugsee CLI](../bugsee-cli/SKILL.md) can do it instead — one binary for JS *and* native — but mind the file extension:
+
+```bash
+npm i -D @bugsee/cli@0.7.10
+# bundle with a .js name: --bundle-output ios/main.js --sourcemap-output ios/main.js.map
+npx bugsee-cli sourcemaps inject ios/main.js
+npx bugsee-cli debug-files upload ios/main.js.map --type sourcemaps \
+    --version 1.4.0 --build 1400
+```
+
+> **`inject` only rewrites `.js`, `.cjs`, and `.mjs` files.** React Native's default `main.jsbundle` output is **skipped silently** — it reports `js_injected=0` and exits 0, and the upload then fails because the map carries no debug ID. Either emit the bundle with a `.js` name, or stay on `bugsee-sourcemaps`.
+
+**Native.** iOS needs dSYMs — `bugsee-cli xcode upload-dsyms` from a Run Script build phase (CLI 0.7.7+) is the shape a config plugin can generate via `withXcodeProject`. Android needs the R8/ProGuard mapping, which the Bugsee Android Gradle plugin uploads automatically.
+
+Full workflow: [`bugsee-upload-symbols`](../bugsee-upload-symbols/SKILL.md).
+
+---
+
 ## Documentation Links
 
 - [Installation](https://docs.bugsee.com/sdk/react_native/installation/)

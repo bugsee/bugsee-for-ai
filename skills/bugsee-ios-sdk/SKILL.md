@@ -280,6 +280,21 @@ Check the Bugsee dashboard for the incoming report.
 
 ---
 
+## Debug Symbols
+
+A Release build strips symbols, so crashes arrive as raw addresses until dSYMs are uploaded. Confirm `DEBUG_INFORMATION_FORMAT = dwarf-with-dsym` for the Release configuration first — without it there are no dSYMs to upload at all.
+
+Two shapes, both driven by the [Bugsee CLI](../bugsee-cli/SKILL.md):
+
+- **Scheme post-action** — the SDK's `BugseeAgent` script runs `bugsee-cli xcode post-action` from Archive → Post-actions. Uploads dSYMs *and* registers the build (build info, dependencies, timings, optional size analysis). Gated to Release + Archive by default.
+- **Run Script build phase** — `bugsee-cli xcode upload-dsyms` (CLI 0.7.7+) uploads dSYMs alone, with no build registration, so it is safe on every build. A genuine failure fails the build on purpose; `--no-fail --no-background` is the usual CI combination.
+
+> **Xcode 15+:** `ENABLE_USER_SCRIPT_SANDBOXING` defaults to `YES` and blocks a build phase from reading the dSYM folder. Set it to `NO` on the target, or declare the folder in the phase's input file lists.
+
+Full workflow, including manual upload of App Store Connect dSYMs: [`bugsee-upload-symbols`](../bugsee-upload-symbols/SKILL.md).
+
+---
+
 ## Documentation Links
 
 - [Installation](https://docs.bugsee.com/sdk/ios/installation/)
