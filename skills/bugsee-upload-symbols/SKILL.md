@@ -90,7 +90,8 @@ It discovers every bundle recursively and skips ones the server already has. The
 The **Bugsee Android Gradle plugin** is the right answer for a Gradle project: applied to the app module, it uploads the R8/ProGuard mapping on each release build using the app token, and NDK symbols when enabled.
 
 - Docs: [Gradle plugin](https://docs.bugsee.com/sdk/android/gradle-plugin/)
-- Apply `id("com.bugsee.android.gradle")` and set the token in the `bugsee { }` DSL via `appToken("<your-app-token>")`. Enable native symbols with `ndk { enabled.set(true) }`.
+- Apply `id("com.bugsee.android.gradle")` and set the token in the `bugsee { }` DSL via `appToken("<your-app-token>")`. **Match the plugin line to the SDK line** — plugin **4.x** for SDK 7.x (pin **4.0.7**; 4.0.6 silently disables every SDK extension), plugin **3.x** (latest 3.6) for SDK 6.x and for KMP 0.1.2, which wraps Android SDK 6.0.4 ([compatibility](https://docs.bugsee.com/sdk/android/gradle-plugin/requirements/)).
+- Enable native symbols with `ndk { enabled.set(true) }` on 4.x, or the boolean `ndk(true)` on 3.x — the wrong form fails to compile.
 
 Without Gradle — a prebuilt APK, or a CI job that only has the artifacts:
 
@@ -125,22 +126,24 @@ bugsee-cli debug-files upload ./dist --type sourcemaps \
 
 > **`inject` only rewrites `.js`, `.cjs`, and `.mjs` files.** Any other extension — notably React Native's default `main.jsbundle` — is skipped **silently**: the run reports `js_injected=0` and exits 0, and the upload then fails because the map has no debug ID. Check the `js_injected` count in the log, or emit the bundle with a `.js` name.
 
+> **Web builds with Subresource Integrity:** from CLI 0.7.11 `inject` refuses (exit 20) when an emitted HTML page pins a hash on a bundle it would rewrite — injecting would make the browser refuse the script. Run `inject` before the hashes are computed, or `--exclude` the pinned files; `--allow-sri` only if the build recomputes hashes afterwards. Use `--exclude '**/node_modules/**'` to keep `inject` out of vendored code inside a build output.
+
 Three behaviours to know before wiring this into a build:
 
 - **A path that does not exist is an error** (exit 10), even when other paths hold maps — so a typo or a build that never ran cannot half-upload a release's symbols.
 - **Nothing to upload is an error too**, unless `--allow-empty` says otherwise (CLI 0.7.10+). Use it for a monorepo package that legitimately builds without maps.
 - **A map without a debug ID fails the run** before anything uploads — it means `inject` never stamped that bundle. Stylesheet and type-declaration maps (`.css.map`, `.d.ts.map`) are skipped rather than failed.
 
-Maps upload several at a time on CLI 0.7.10+; `--concurrency N` sets a ceiling and `--concurrency 1` restores sequential uploads. Re-running after a rebuild uploads only the chunks that changed.
+Maps upload several at a time on CLI 0.7.10+; `--concurrency N` sets a ceiling and `--concurrency 1` restores sequential uploads. Re-running after a rebuild uploads only the chunks that changed. To keep original source off Bugsee's servers, add `--strip-sources-content` (0.7.11+) — traces still resolve to file/line/column, without the source snippet.
 
-**For React Native, the `bugsee-sourcemaps` helper remains the documented path** (`make` / `generate` / `upload`, with `-t/--app-token`, `-p/--platform`, `-c/--configuration`, `-v/--app-version`) — see [React Native crashes](https://docs.bugsee.com/sdk/react_native/crashes/) and [docs.bugsee.com/tools/sourcemaps](https://docs.bugsee.com/tools/sourcemaps/). It handles the `.jsbundle` naming that `inject` skips. It ships as a `react-native-bugsee` devDependency — **do not `npm install -g bugsee-sourcemaps` unpinned.**
+**For React Native, the `bugsee-sourcemaps` helper remains the documented path** (the docs label it legacy in general, but the React Native crashes page still uses it; `make` / `generate` / `upload`, with `-t/--app-token`, `-p/--platform`, `-c/--configuration`, `-v/--app-version`) — see [React Native crashes](https://docs.bugsee.com/sdk/react_native/crashes/) and [docs.bugsee.com/tools/sourcemaps](https://docs.bugsee.com/tools/sourcemaps/). It handles the `.jsbundle` naming that `inject` skips. It ships as a `react-native-bugsee` devDependency — **do not `npm install -g bugsee-sourcemaps` unpinned.**
 
 Use `bugsee-cli` for React Native only when the bundle is emitted with a `.js` name. For web and other JS builds it is the better choice, since one binary covers JS maps *and* the native symbols the same app needs.
 
-Pin the CLI rather than floating on latest — current release **0.7.10**:
+Pin the CLI rather than floating on latest — current release **0.7.11**:
 
 ```bash
-npm i -D @bugsee/cli@0.7.10     # then: npx bugsee-cli sourcemaps inject ...
+npm i -D @bugsee/cli@0.7.11     # then: npx bugsee-cli sourcemaps inject ...
 ```
 
 iOS and Android **native** frames in a React Native app still need dSYMs and mapping files — see the sections above.
@@ -207,7 +210,7 @@ Use **`get_symbol_by_uuid`** to diagnose whether a module UUID is uploaded and i
 
 1. **Diagnose with `get_symbol_by_uuid`.** When a crash frame or upload has a module/debug UUID, call `get_symbol_by_uuid` with that `uuid` (optional `application_id_or_key` to narrow). Matches return in any status (`uploading`, `processing`, `ready`, `broken`, `deleted`), which distinguishes never-uploaded from still-processing or broken — the usual reason a crash sits in `missing_sym`. An empty `symbols` array is **not** proof the upload is missing (matches may exist only on applications the caller cannot read). Multiple entries can be expected (co-resident formats sharing a UUID, e.g. `elf` plus `il2cpp-linemap`). See [MCP usage](https://docs.bugsee.com/mcp/usage/).
 
-2. **Match version/build.** The artifact you uploaded must belong to the binary that shipped. Bugsee matches an iOS crash to the dSYM of that build ([symbolication](https://docs.bugsee.com/sdk/ios/symbolication/)). CLI uploads (`bugsee-cli` from `@bugsee/bugsee-cli@0.7.5`) record `--version` and `--build` on the symbol document — including `--type sourcemaps`. If the Android Gradle plugin embedded a build UUID, the mapping upload must use that same `--uuid` or the crash never resolves ([debug files](https://docs.bugsee.com/cli/debug-files/)).
+2. **Match version/build.** The artifact you uploaded must belong to the binary that shipped. Bugsee matches an iOS crash to the dSYM of that build ([symbolication](https://docs.bugsee.com/sdk/ios/symbolication/)). CLI uploads (`bugsee-cli`, e.g. from `@bugsee/cli`) record `--version` and `--build` on the symbol document — including `--type sourcemaps`. If the Android Gradle plugin embedded a build UUID, the mapping upload must use that same `--uuid` or the crash never resolves ([debug files](https://docs.bugsee.com/cli/debug-files/)).
 
 3. **Trigger a fresh crash** on that build (or wait for the next real one). Existing issues keep the dump they were created with.
 

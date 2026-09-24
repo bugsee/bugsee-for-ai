@@ -183,7 +183,7 @@ See [React Native crashes](https://docs.bugsee.com/sdk/react_native/crashes/) an
 The [Bugsee CLI](../bugsee-cli/SKILL.md) can do it instead — one binary for JS *and* native — but mind the file extension:
 
 ```bash
-npm i -D @bugsee/cli@0.7.10
+npm i -D @bugsee/cli@0.7.11
 # bundle with a .js name: --bundle-output ios/main.js --sourcemap-output ios/main.js.map
 npx bugsee-cli sourcemaps inject ios/main.js
 npx bugsee-cli debug-files upload ios/main.js.map --type sourcemaps \

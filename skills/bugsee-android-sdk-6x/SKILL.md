@@ -12,7 +12,7 @@ allowed-tools: Bash, Read, Edit, Write, WebFetch, Glob, Grep
 
 # Bugsee Android SDK (6.x, Legacy)
 
-Opinionated wizard for the **6.x** line of the Bugsee Android SDK — bug reporting with video, crash reporting, network monitoring, and console logs, using the classic `Bugsee.launch(...)` API (no Gradle plugin).
+Opinionated wizard for the **6.x** line of the Bugsee Android SDK — bug reporting with video, crash reporting, network monitoring, and console logs, using the classic `Bugsee.launch(...)` API (the Gradle plugin is optional on 6.x — the 3.x line only uploads symbols; it does no instrumentation).
 
 > **Legacy.** 7.x is the current Android SDK and the default for new apps — use [`bugsee-android-sdk`](../bugsee-android-sdk/SKILL.md) instead. Use this 6.x skill **only** to maintain an app already pinned to `com.bugsee:bugsee-android` 6.x, or when the user explicitly asks for the 6.x line. 7.x is a different, plugin-based SDK with a new API; see the [migration guide](https://docs.bugsee.com/sdk/android/migration/) when upgrading.
 
@@ -208,7 +208,24 @@ Check the Bugsee dashboard for the incoming report.
 
 ## Debug Symbols
 
-The 6.x line has **no Gradle plugin**, so an obfuscated release build uploads its `mapping.txt` through the [Bugsee CLI](../bugsee-cli/SKILL.md) (or the dashboard's manual upload):
+The 6.x line pairs with the **3.x** Gradle plugin (latest **3.6**) — never 4.x, which targets the 7.x module layout ([compatibility](https://docs.bugsee.com/sdk/android/gradle-plugin/requirements/)). Plugin 3.x does no bytecode instrumentation; it uploads the R8/ProGuard `mapping.txt` (and, with `ndk(true)`, NDK symbols) on each release build and injects a `BUILD_UUID` into the merged manifest ([6.x Gradle plugin](https://docs.bugsee.com/sdk/android/v6/gradle-plugin/)):
+
+```kotlin
+// app/build.gradle.kts
+plugins {
+    id("com.android.application")
+    id("com.bugsee.android.gradle") version "3.6"
+}
+
+bugsee {
+    appToken("<your_app_token>")
+    ndk(true)   // only if the app ships native libraries
+}
+```
+
+3.x takes the boolean `ndk(true)`; the nested `ndk { enabled.set(true) }` block is 4.x-only.
+
+Without the plugin — or from CI with no Gradle — upload the mapping through the [Bugsee CLI](../bugsee-cli/SKILL.md) (or the dashboard's manual upload):
 
 ```bash
 bugsee-cli debug-files upload ./app/build/outputs/mapping/release \
@@ -217,7 +234,7 @@ bugsee-cli debug-files upload ./app/build/outputs/mapping/release \
 
 `--version` / `--build` must match the shipped build — a mismatch uploads a mapping that is accepted and then never resolves a crash. Native NDK symbols go up with `--type elf` and a `--uuid` matching what the SDK reports.
 
-Upgrading to 7.x replaces this step with the Gradle plugin, which uploads on every release build automatically.
+Upgrading to 7.x moves to plugin 4.x, which adds instrumentation on top of the uploads.
 
 Full workflow: [`bugsee-upload-symbols`](../bugsee-upload-symbols/SKILL.md).
 
