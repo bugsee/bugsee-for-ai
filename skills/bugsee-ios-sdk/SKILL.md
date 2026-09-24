@@ -14,13 +14,15 @@ allowed-tools: Bash, Read, Edit, Write, WebFetch, Glob, Grep
 
 Opinionated wizard that scans your iOS project and guides you through complete Bugsee setup — bug reporting with video, crash reporting, network monitoring, console logs, APM, and optional build size analysis.
 
-Current stable pin (re-verified 2026-08-25 against the package registries; docs.bugsee.com release notes currently stop at 6.3.0):
+Current stable pin (re-verified 2026-09-24 against the SPM tags and CocoaPods trunk; matches the [6.x release notes](https://docs.bugsee.com/sdk/ios/release-notes/)):
 
 - **SPM** tag `6.3.2` at `https://github.com/bugsee/spm`
 - **CocoaPods** trunk pod `Bugsee` `6.3.2`
 - **Carthage** binary catalog also lists `6.3.2`
 
 > **Note:** Always verify against [docs.bugsee.com/sdk/ios/installation/](https://docs.bugsee.com/sdk/ios/installation/) before implementing. Prefer registry tags over the release-notes page when they disagree.
+
+> **7.x is in beta — do not install it unless the user explicitly asks.** `7.0.0-beta1` / `7.0.0-beta2` are tagged on the same `https://github.com/bugsee/spm` repo, but 7.x is a breaking line: every option constant is renamed into the `BugseeOption*` family (hard-coded option strings silently fall back to defaults), Feedback moves to a separate `BugseeFeedback` package (`https://github.com/bugsee/feedback-spm`), `pause`/`resume` and several other methods are removed or renamed, SPM is the only channel (CocoaPods and Carthage are retired), and beta2 raises the minimum to **iOS 15 / tvOS 15**. This skill targets **6.x**; for a 7.x beta install follow the [7.x installation](https://docs.bugsee.com/sdk/ios/v7/installation/), [migration guide](https://docs.bugsee.com/sdk/ios/v7/migration/) and [7.x release notes](https://docs.bugsee.com/sdk/ios/v7/release-notes/) rather than the 6.x code below. An SPM rule of "Up to Next Major" from 6.3.2 never resolves a 7.0.0 pre-release, so existing 6.x apps are not moved by accident.
 
 ---
 
@@ -201,6 +203,7 @@ Common options:
 | `monitorNetwork` | `true` | Capture network traffic |
 | `sanitizeNetworkData` | `true` | Auto-redact known PII keys from captured network events (6.1.3). Applies only when no custom network filter is set. |
 | `captureLogs` | `true` | Capture console logs |
+| `captureOSLogs` | `false` | **No effect since 6.3.2** — `os_log` / `Logger` capture was permanently disabled (it polled the log store all session). Still compiles; do not enable it expecting output. Use `Bugsee.log(...)` or `NSLog` for logs you want captured. |
 | `maxRecordingTime` | `60` | Max recording duration (seconds) |
 | `shakeToReport` | `false` | Shake device to trigger report |
 | `screenshotEnabled` | `true` | Attach screenshot to report |
@@ -307,3 +310,4 @@ Full workflow, including manual upload of App Store Connect dSYMs: [`bugsee-uplo
 - [Build size analysis](https://docs.bugsee.com/sdk/ios/build-size-analysis/)
 - [Manual invocation](https://docs.bugsee.com/sdk/ios/manual/)
 - [Release notes](https://docs.bugsee.com/sdk/ios/release-notes/)
+- [7.x beta: installation](https://docs.bugsee.com/sdk/ios/v7/installation/) · [migration from 6.x](https://docs.bugsee.com/sdk/ios/v7/migration/) · [release notes](https://docs.bugsee.com/sdk/ios/v7/release-notes/)

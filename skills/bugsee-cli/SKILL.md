@@ -27,7 +27,7 @@ For the platform-by-platform symbol-upload story, use [`bugsee-upload-symbols`](
 Check for an existing install first — a build plugin may have already placed one:
 
 ```bash
-bugsee-cli --version    # -> "bugsee-cli 0.7.10"
+bugsee-cli --version    # -> "bugsee-cli 0.7.11"
 ```
 
 | Channel | Command | Use for |
@@ -58,8 +58,9 @@ Integrations activate a new capability by pinning a **minimum CLI version**. Bef
 | Re-uploading a symbol the server already has is a skip, not a failure | **0.7.8** |
 | `sourcemaps inject` registers a debug ID another tool (Rollup 4) wrote | **0.7.9** |
 | `debug-files upload --type sourcemaps --concurrency N` / `--allow-empty` | **0.7.10** |
+| `sourcemaps inject --exclude <glob>` / `--allow-sri`; `debug-files upload --strip-sources-content`; a sourcemaps `--dry-run` that tolerates un-keyed maps | **0.7.11** |
 
-Current release: **0.7.10**. When a script needs a floor, gate on it:
+Current release: **0.7.11** (npm `latest`, tag `v0.7.11`). The CLI's `main` already carries a 0.7.12 changelog entry (`upload build` without `--artifact`), but it is not published — do not write it into a script until `npm view @bugsee/cli version` shows it. When a script needs a floor, gate on it:
 
 ```bash
 bugsee-cli --version   # parse the X.Y.Z and compare, or just require a known-good install
@@ -125,15 +126,22 @@ bugsee-cli debug-files upload ./dist --type sourcemaps \
 
 > **It only rewrites `.js`, `.cjs`, and `.mjs` files.** Any other extension — React Native's `main.jsbundle`, for instance — is skipped **silently**: `js_injected=0` and exit 0, with the failure surfacing later as a map with no debug ID. Check the `js_injected` count in the log.
 
+Two `inject` guards (0.7.11+):
+
+- **`--exclude <glob>`** (repeatable) leaves part of the output alone — `--exclude '**/node_modules/**'` keeps it out of vendored code inside a build output (Nuxt `.output/server`, Next.js). Matched against the absolute path, the path relative to the cwd, and the path relative to each walked root; `*` crosses `/`. An empty or unparseable pattern is exit 20, never a silent match-nothing. Excluded files are counted as `js_excluded`. A bundle with **no** map is still stamped by design — its crash then shows `missing_sym`, which prompts the upload.
+- **Subresource Integrity is refused (exit 20).** If an `.html`/`.htm`/`.xhtml` under (or directly beside) the given paths pins a bundle this run would rewrite (`<script integrity src=…>`, `<link rel=modulepreload|preload integrity href=…>`), injecting would break the pinned hash and the browser would run nothing. Stamp before the hashes are computed, `--exclude` the pinned files, or pass `--allow-sri` only when the build recomputes the hashes **after** `inject`. `--dry-run` refuses too. It cannot see SRI that never reaches the emitted HTML (server templates, request-time rendering such as Next.js `experimental.sri`).
+
 Maps upload **several at a time** (0.7.10+). `--concurrency N` (1–32) is a ceiling, not a fixed width; left unset it scales with the batch. `--concurrency 1` restores strictly sequential uploads. An explicit `--uuid` forces sequential uploads regardless, because it keys every map under one ID.
 
 Three behaviours worth knowing before wiring this into a build:
 
 - **A path that does not exist is an error** (exit 10), even when other paths hold maps — a typo or a build that never ran cannot half-upload a release's symbols.
 - **Nothing to upload is an error too**, unless `--allow-empty` says otherwise. Use it for a monorepo package that legitimately builds without maps.
-- **A map without a debug ID fails the run** before anything uploads — it means `inject` never stamped that bundle. Stylesheet and type-declaration maps (`.css.map`, `.d.ts.map`, …) are skipped, not failed.
+- **A map without a debug ID fails the run** before anything uploads — it means `inject` never stamped that bundle. Stylesheet and type-declaration maps (`.css.map`, `.d.ts.map`, …) are skipped, not failed. On 0.7.11+ a `--dry-run` reports and counts such maps (`unkeyed`) instead of exiting 11, so `inject --dry-run` → `upload --dry-run` works as a preview on a fresh build; a real run still exits 11.
 
-`--concurrency` and `--allow-empty` are rejected (exit 20) for any other `--type`, rather than accepted and ignored.
+**`--strip-sources-content`** (0.7.11+) uploads each map without its embedded `sourcesContent` — file/line/column still resolve, the source snippet is dropped, for teams who do not want source leaving the build machine. The map on disk is untouched; indexed maps' `sections[].map` are stripped too.
+
+`--concurrency`, `--allow-empty` and `--strip-sources-content` are rejected (exit 20) for any other `--type`, rather than accepted and ignored.
 
 ---
 
@@ -167,8 +175,8 @@ The metadata resolvers exit 0 with empty output (`[]`, `{}`, `null`, empty strin
 
 ## Documentation
 
-- [CLI overview](https://docs.bugsee.com/cli/) · [Installation](https://docs.bugsee.com/cli/installation/) · [Configuration](https://docs.bugsee.com/cli/configuration/)
+- [CLI overview](https://docs.bugsee.com/cli/) · [Release notes](https://docs.bugsee.com/cli/release-notes/) · [Installation](https://docs.bugsee.com/cli/installation/) · [Configuration](https://docs.bugsee.com/cli/configuration/)
 - [Debug information files](https://docs.bugsee.com/cli/debug-files/) · [Source maps](https://docs.bugsee.com/cli/sourcemaps/) · [Builds](https://docs.bugsee.com/cli/builds/)
 - [iOS build publishing](https://docs.bugsee.com/cli/xcode/) · [Metadata resolvers](https://docs.bugsee.com/cli/metadata/) · [Exit codes](https://docs.bugsee.com/cli/exit-codes/) · [Self-update](https://docs.bugsee.com/cli/update/)
 
-The docs site trails the binary for the newest additions — `xcode upload-dsyms`, `--concurrency`, and `--allow-empty` are not on it yet. **`bugsee-cli <command> --help` is authoritative for the installed version**; check it before telling a user a flag does not exist.
+The docs site covers the CLI through 0.7.10 (`xcode upload-dsyms`, `--concurrency`, `--allow-empty` included); the 0.7.11 additions — `--exclude`, `--allow-sri`, `--strip-sources-content` — are not on it yet. **`bugsee-cli <command> --help` is authoritative for the installed version**; check it before telling a user a flag does not exist.

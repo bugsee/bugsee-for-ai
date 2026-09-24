@@ -14,7 +14,7 @@ allowed-tools: Bash, Read, Edit, Write, WebFetch, Glob, Grep
 
 Opinionated wizard that scans the Android project and wires up Bugsee 7.x — core SDK, Gradle plugin, extension modules for network clients / Compose / feedback / NDK, APM, and manifest-based auto-launch.
 
-> **7.x is the current Android SDK** (`com.bugsee:bugsee-android:7.2.0`, Gradle plugin `com.bugsee.android.gradle` / `com.bugsee:bugsee-android-gradle-plugin:4.0.6`, re-verified 2026-09-09 on Maven Central and the Gradle Plugin Portal, lastUpdated 2026-09-08) and the default for new and existing apps. Keep the two pins paired — plugin 4.0.6's Compose launch crash fix requires SDK 7.1.4+; **7.2.0** satisfies that. It is plugin-based with a new API. If you are maintaining an app still pinned to the 6.x line, use the legacy [6.x skill](../bugsee-android-sdk-6x/SKILL.md) instead; when upgrading from 6.x, follow the [migration guide](https://docs.bugsee.com/sdk/android/migration/).
+> **7.x is the current Android SDK** (`com.bugsee:bugsee-android:7.2.0`, Gradle plugin `com.bugsee.android.gradle` / `com.bugsee:bugsee-android-gradle-plugin:4.0.7`, re-verified 2026-09-24 on Maven Central; SDK lastUpdated 2026-09-08, plugin 2026-09-19) and the default for new and existing apps. Keep the two pins paired — the plugin's Compose launch crash fix (4.0.6+) requires SDK 7.1.4+; **7.2.0** satisfies that. **Never pin plugin 4.0.6** — it silently disables every SDK extension (see Phase 2). It is plugin-based with a new API. If you are maintaining an app still pinned to the 6.x line, use the legacy [6.x skill](../bugsee-android-sdk-6x/SKILL.md) instead; when upgrading from 6.x, follow the [migration guide](https://docs.bugsee.com/sdk/android/migration/).
 
 ## Invoke This Skill When
 
@@ -88,7 +88,7 @@ Decision table:
 
 ### Step 1 — Apply the Bugsee Gradle plugin (mandatory)
 
-7.x requires the plugin. Without it, APM, main-thread misuse detection, log capture rewrites, OkHttp injection, and Compose secure redaction do not work. Pin plugin **4.0.6** with SDK **7.2.0** (current Plugin Portal / Maven release; keep the two pins paired). Plugin 4.x pairs with SDK 7.x; do not mix with plugin 3.x / SDK 6.x. There is no separate Gradle-plugin skill — apply the notes below from [plugin 4.0.6](https://docs.bugsee.com/sdk/android/gradle-plugin/releases/).
+7.x requires the plugin. Without it, APM, main-thread misuse detection, log capture rewrites, OkHttp injection, and Compose secure redaction do not work. Pin plugin **4.0.7** with SDK **7.2.0** (current Plugin Portal / Maven release; keep the two pins paired). Plugin 4.x pairs with SDK 7.x; do not mix with plugin 3.x / SDK 6.x. There is no separate Gradle-plugin skill — apply the notes below from the [plugin release notes](https://docs.bugsee.com/sdk/android/gradle-plugin/releases/).
 
 **Kotlin DSL (`app/build.gradle.kts`):**
 
@@ -96,7 +96,7 @@ Decision table:
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
-    id("com.bugsee.android.gradle") version "4.0.6"
+    id("com.bugsee.android.gradle") version "4.0.7"
 }
 
 bugsee {
@@ -124,7 +124,7 @@ bugsee {
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
-    id 'com.bugsee.android.gradle' version '4.0.6'
+    id 'com.bugsee.android.gradle' version '4.0.7'
 }
 
 bugsee {
@@ -147,7 +147,13 @@ pluginManagement {
 
 With the plugin applied, the core `com.bugsee:bugsee-android` artifact is auto-pulled (bounded to the same MAJOR.MINOR series as the plugin's `sdk-min-version`). Dependency-driven extensions (OkHttp, Ktor 2/3, Cronet, Compose) are auto-installed when the matching library is in the graph. Feedback, NDK, and leak are **not** dependency-driven — enable them with the DSL toggles above.
 
-From plugin **4.0.6**: variants that do **not** include Bugsee (e.g. `debugImplementation` only) are no longer instrumented or wired. Flavors are handled the same way. Plain `implementation` is unchanged — do not invent extra plugin flags for that case. The Compose launch crash fix requires SDK **7.1.4+**; **7.2.0** satisfies that — do not pair 4.0.6 with an older 7.1.x SDK. No DSL changes. Plugin latest is still **4.0.6** (Maven Central / Plugin Portal lastUpdated 2026-08-26).
+From plugin **4.0.6** (carried into 4.0.7): variants that do **not** include Bugsee (e.g. `debugImplementation` only) are no longer instrumented or wired. Flavors are handled the same way. Plain `implementation` is unchanged — do not invent extra plugin flags for that case. The Compose launch crash fix requires SDK **7.1.4+**; **7.2.0** satisfies that — do not pair plugin 4.0.6+ with an older 7.1.x SDK. No DSL changes. Plugin latest is **4.0.7** (Maven Central lastUpdated 2026-09-19).
+
+> **Plugin 4.0.6 is broken — upgrade it on sight.** In apps built against the published SDK, 4.0.6 stripped the extension providers from the manifest without registering the extensions in their place: **NDK crash reporting, feedback, Compose, OkHttp, Ktor, Cronet and leak detection never ran**, with a green build and a normally working app. Because the Compose extension never installed, content marked `bugseeSecure` was **not masked** in report screenshots. 4.0.7 fixes it. If an app is on 4.0.6 and cannot move yet, stay on 4.0.5 or set `optimizeExtensionsLoading.set(false)` in `bugsee {}`. Also in 4.0.7 ([release notes](https://docs.bugsee.com/sdk/android/gradle-plugin/releases/)):
+> - Only Bugsee's own extension providers are consolidated — a `Bugsee<Something>InitProvider` in the app or a wrapper SDK is no longer silently removed (4.0.0-beta10 → 4.0.6 removed them).
+> - If the plugin would strip extension providers it cannot register (e.g. an SDK older than 7.0.0-beta11 declared with a non-literal version such as `7.+`), the build now **fails** naming the providers and pointing at `optimizeExtensionsLoading` — that error means "pin a literal SDK version", not "disable the plugin".
+> - The built-in fallback uploader treats the server's "already uploaded" reply as success, so an unchanged mapping is no longer re-uploaded on every build.
+> - The auto-added SDK floor is 7.2.0.
 
 ### Step 2 — Pin the core SDK (recommended)
 
@@ -174,13 +180,13 @@ dependencies {
 
 To suppress auto-install of a dependency-driven extension, set the corresponding flag in `bugsee { instrumentation { ... } }` (e.g. `cronet.set(false)`). To opt out of core auto-pull entirely, `sdkAutoLoad.set(false)`.
 
-> **Current stable releases (re-verified 2026-09-09 against Maven Central + Gradle Plugin Portal, lastUpdated 2026-09-08):** SDK `com.bugsee:bugsee-android:7.2.0` (and matching `bugsee-android-compose`, `bugsee-android-ndk`, `bugsee-android-feedback`, `bugsee-android-okhttp`, `bugsee-android-leak` at **7.2.0**) and Gradle plugin `4.0.6` (`com.bugsee:bugsee-android-gradle-plugin` / Plugin Portal `com.bugsee.android.gradle`; plugin lastUpdated 2026-08-26). The plugin tracks its own 4.x line, separate from the SDK — pin both together.
+> **Current stable releases (re-verified 2026-09-24 against Maven Central; SDK lastUpdated 2026-09-08):** SDK `com.bugsee:bugsee-android:7.2.0` (and matching `bugsee-android-compose`, `bugsee-android-ndk`, `bugsee-android-feedback`, `bugsee-android-okhttp`, `bugsee-android-leak` at **7.2.0**) and Gradle plugin `4.0.7` (`com.bugsee:bugsee-android-gradle-plugin` / Plugin Portal `com.bugsee.android.gradle`; plugin lastUpdated 2026-09-19). The plugin tracks its own 4.x line, separate from the SDK — pin both together.
 >
-> **SDK 7.2.0 / plugin 4.0.6 — cite, do not invent APIs.** [Android SDK 7.2.0](https://docs.bugsee.com/sdk/android/release-notes/) is a feature release; the public API is **additive** (nothing removed). New surface: `Bugsee.notify()` overloads, `NotifyFlushDelay`, `DetectAndReportHangSampling`, `DetectAndReportAnrSampling`. [Gradle plugin 4.0.6](https://docs.bugsee.com/sdk/android/gradle-plugin/releases/) is unchanged — no DSL changes. Agents should **not** advise workarounds 7.1.4 / 4.0.6 made unnecessary:
+> **SDK 7.2.0 / plugin 4.0.7 — cite, do not invent APIs.** [Android SDK 7.2.0](https://docs.bugsee.com/sdk/android/release-notes/) is a feature release; the public API is **additive** (nothing removed). New surface: `Bugsee.notify()` overloads, `NotifyFlushDelay`, `DetectAndReportHangSampling`, `DetectAndReportAnrSampling`. [Gradle plugin 4.0.7](https://docs.bugsee.com/sdk/android/gradle-plugin/releases/) is a fix release — no DSL changes. Agents should **not** advise workarounds 7.1.4 / 4.0.6 made unnecessary:
 > - **JVM unit tests.** 7.1.4+ stops Bugsee from failing ordinary JVM unit tests. If someone disabled `mainThreadMisuse` / `log` / `thread` / `operationDispatch` instrumentation only to get a green test run, they can turn those back on.
 > - **Host logging.** Logging statements in the host app are unaffected by failures inside Bugsee capture.
 > - **Report UI / notifications.** Crash when the report screen is restored after process death; crash on light/dark theme change while a notification-opened report is on screen; Huawei Android 6 notification small-icon fallback; screenshot loss on some storage configs.
-> - **Variant / flavor wiring (4.0.6).** Variants (and flavors) that do not include Bugsee are left uninstrumented. Plain `implementation` is unchanged.
+> - **Variant / flavor wiring (4.0.6+).** Variants (and flavors) that do not include Bugsee are left uninstrumented. Plain `implementation` is unchanged.
 > - **Compose.** The Compose launch crash fix **requires SDK 7.1.4+**. **7.2.0** satisfies that. Keep the two pins paired.
 > - **Instrumentation / APM.** Thread-instrumentation crash fix; failed DB/file operations are now timed (host exception handling unchanged). Manifest optimization is applied only when the SDK version supports it; already-minified third-party libraries are left as-is.
 
@@ -285,7 +291,7 @@ Native crash detection is **not** in the core artifact. Enable it with the plugi
 
 ### WebSocket
 
-OkHttp `newWebSocket(...)` traffic (connection lifecycle, frames, close/error) is captured automatically when the OkHttp extension is installed (Gradle plugin **4.0.3+**, included in 4.0.6). Ktor on the OkHttp engine is automatic; on CIO, route calls through the `bugseeWebSocket` helper. `NetworkEventStage.WebSocket` is the stage value for custom events.
+OkHttp `newWebSocket(...)` traffic (connection lifecycle, frames, close/error) is captured automatically when the OkHttp extension is installed (Gradle plugin **4.0.3+**; use 4.0.7 — 4.0.6 never registered the OkHttp extension). Ktor on the OkHttp engine is automatic; on CIO, route calls through the `bugseeWebSocket` helper. `NetworkEventStage.WebSocket` is the stage value for custom events.
 
 ### `FLAG_SECURE`
 

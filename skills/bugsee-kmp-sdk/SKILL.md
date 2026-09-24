@@ -86,7 +86,7 @@ kotlin {
 }
 ```
 
-Current Maven latest (re-verified 2026-08-25): **0.1.2**. Pin that version — docs still show `+`, which the KMP installation page itself warns against (`Pin your dependency to a specific version rather than using a floating range`).
+Current Maven latest (re-verified 2026-09-24): **0.1.2**. Pin that version — docs still show `+`, which the KMP installation page itself warns against (`Pin your dependency to a specific version rather than using a floating range`).
 
 > **Note:** The CocoaPods integration approach can't be used together with the `embedAndSignAppleFrameworkForXcode` mechanism used for direct integration. See [Kotlin CocoaPods overview](https://kotlinlang.org/docs/multiplatform/multiplatform-cocoapods-overview.html#set-up-an-environment-to-work-with-cocoapods).
 
@@ -204,13 +204,15 @@ For readable stack traces from release builds, upload platform debug symbols. Th
 
 ### Android
 
-In a typical KMP/Compose Multiplatform project, wire the Bugsee Gradle plugin into `composeApp/build.gradle.kts`. Pin plugin **4.0.6**; if the Android target also ships `com.bugsee:bugsee-android`, pair it with **7.2.0+** (the [4.0.6 Compose launch crash fix](https://docs.bugsee.com/sdk/android/gradle-plugin/releases/) requires SDK 7.1.4+; 7.2.0 satisfies that). See [`bugsee-android-sdk`](../bugsee-android-sdk/SKILL.md).
+In a typical KMP/Compose Multiplatform project, wire the Bugsee Gradle plugin into `composeApp/build.gradle.kts`. **Match the plugin line to the native Android SDK the KMP release wraps** — lines are not cross-compatible ([requirements](https://docs.bugsee.com/sdk/android/gradle-plugin/requirements/)): plugin **3.x ↔ SDK 6.x**, plugin **4.x ↔ SDK 7.x**.
+
+KMP **0.1.2** wraps native Android SDK **6.0.4** (its Maven POM's `com.bugsee:bugsee-android` dependency; check the [KMP release notes](https://docs.bugsee.com/sdk/kmp/release-notes/) for later releases), so pin plugin **3.6** — the latest 3.x — and use the boolean `ndk(true)`. **Do not** reach for plugin 4.x here: it expects the 7.x module layout, auto-pulls `com.bugsee:bugsee-android` on the 7.x range, and its nested `ndk { enabled.set(true) }` block does not exist on 3.x (using it there fails with `Type mismatch: inferred type is () -> Unit but Boolean was expected`). Once a KMP release wraps SDK 7.x, switch to plugin 4.0.7 (never 4.0.6) and the nested block — see [`bugsee-android-sdk`](../bugsee-android-sdk/SKILL.md).
 
 ```kotlin
 // gradle/libs.versions.toml
 //
 // [versions]
-// bugseeGradle = "4.0.6"
+// bugseeGradle = "3.6"   // plugin line paired with the native SDK this KMP release wraps (6.x -> 3.x)
 //
 // [plugins]
 // bugsee-gradle-plugin = { id = "com.bugsee.android.gradle", version.ref = "bugseeGradle" }
@@ -230,9 +232,7 @@ android {
 
     bugsee {
         appToken("<your_app_token>")
-        ndk {
-            enabled.set(true)   // upload NDK debug symbols (only if your app ships native libraries)
-        }
+        ndk(true)   // upload NDK debug symbols (only if your app ships native libraries)
     }
 }
 ```

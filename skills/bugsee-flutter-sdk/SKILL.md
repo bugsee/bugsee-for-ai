@@ -121,7 +121,7 @@ class MyApp extends StatelessWidget {
 > Replace `<android-app-token>` and `<ios-app-token>` with tokens from your Bugsee dashboard. It is common to use different app tokens for iOS and Android.
 
 **Key points:**
-- `HttpOverrides.global = Bugsee.defaultHttpOverrides;` is required to intercept network requests
+- `HttpOverrides.global = Bugsee.defaultHttpOverrides;` is required to intercept Dart network requests (`dart:io` `HttpClient`, including `package:http`) — there is no default for it. Capture needs **both** this and the `monitorNetwork` launch option (default `true`); setting `monitorNetwork` to `false` disables capture regardless of the overrides ([network](https://docs.bugsee.com/sdk/flutter/network/))
 - `Bugsee.launch()` with `appRunCallback` ensures all errors in the app are captured in the proper zone
 
 ---
