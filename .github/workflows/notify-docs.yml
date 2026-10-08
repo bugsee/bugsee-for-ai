@@ -4,10 +4,13 @@ name: Notify docs
 # (bugsee/docs: scripts/mirror-skills.mjs). When skills/ changes on main, tell that repo to
 # open its sync PR right away instead of waiting for its scheduled poll.
 #
-# Needs the DOCS_SYNC_TOKEN repository secret: a fine-grained PAT or GitHub App token with
-# "Contents: write" on bugsee/docs (that is what the repository_dispatch API requires).
-# Without the secret this workflow does NOT fail — it logs a notice and docs picks the change up
-# on its next scheduled sync (every 6 hours).
+# Authenticates as a GitHub App (not a person): the app's client ID is the repository VARIABLE
+# SYNC_APP_CLIENT_ID and its private key is the repository SECRET SYNC_APP_PRIVATE_KEY. The app
+# needs "Contents: write" on bugsee/docs only (that is what repository_dispatch requires). A
+# short-lived token is minted per run and scoped down to that one repo.
+#
+# Without those two values this workflow does NOT fail — it logs a notice and docs picks the
+# change up on its next scheduled sync (every 6 hours).
 
 on:
   push:
@@ -23,18 +26,32 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     env:
-      DOCS_SYNC_TOKEN: ${{ secrets.DOCS_SYNC_TOKEN }}
+      SYNC_APP_CLIENT_ID: ${{ vars.SYNC_APP_CLIENT_ID }}
+      SYNC_APP_PRIVATE_KEY: ${{ secrets.SYNC_APP_PRIVATE_KEY }}
     steps:
+      - name: Mint a short-lived token for bugsee/docs
+        id: app
+        if: env.SYNC_APP_CLIENT_ID != '' && env.SYNC_APP_PRIVATE_KEY != ''
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ vars.SYNC_APP_CLIENT_ID }}
+          private-key: ${{ secrets.SYNC_APP_PRIVATE_KEY }}
+          owner: bugsee
+          repositories: docs
+          permission-contents: write
+
       - name: Ask bugsee/docs to sync
-        if: env.DOCS_SYNC_TOKEN != ''
+        if: steps.app.outputs.token != ''
+        env:
+          GH_TOKEN: ${{ steps.app.outputs.token }}
         run: |
           curl -fsS -X POST \
-            -H "Authorization: Bearer ${DOCS_SYNC_TOKEN}" \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
             -H "Accept: application/vnd.github+json" \
             https://api.github.com/repos/bugsee/docs/dispatches \
             -d '{"event_type":"bugsee-for-ai-updated","client_payload":{"sha":"${{ github.sha }}"}}'
           echo "Dispatched bugsee-for-ai-updated to bugsee/docs for ${{ github.sha }}"
 
-      - name: Skipped (no token)
-        if: env.DOCS_SYNC_TOKEN == ''
-        run: echo "::notice::DOCS_SYNC_TOKEN is not set; bugsee/docs will pick this change up on its next scheduled sync (every 6 hours)."
+      - name: Skipped (GitHub App not configured)
+        if: steps.app.outputs.token == ''
+        run: echo "::notice::SYNC_APP_CLIENT_ID / SYNC_APP_PRIVATE_KEY are not set; bugsee/docs will pick this change up on its next scheduled sync (every 6 hours)."
