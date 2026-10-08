@@ -251,6 +251,96 @@ If editing `.xcscheme` XML is awkward — a generated `iosApp` project, or a CI-
 
 ---
 
+## Verification
+
+Build and run the app on both an Android device/emulator and an iOS device/simulator, then work through the steps below.
+
+### 1. Confirm the SDK actually started
+
+```kotlin
+import com.bugsee.kmp.Bugsee
+
+// Anywhere after launch(), from commonMain
+println("Bugsee launched: ${Bugsee.isLaunched()}")
+```
+
+`Bugsee.isLaunched()` is backed by the native SDKs on both targets, so `false` means `launch()` bailed out rather than that the check is unsupported.
+
+### 2. File a test report
+
+The default trigger gesture differs per platform — `BugseeLaunchOptions` defaults `shakeToReport` to `true` on Android and `screenshotToReport` to `true` on iOS:
+
+- **Android** — shake the device
+- **iOS** — take a screenshot
+
+Or trigger the dialog from shared code, which works on both:
+
+```kotlin
+import com.bugsee.kmp.Bugsee
+import com.bugsee.kmp.BugseeSeverity
+
+Bugsee.showReportDialog()
+
+// Or pre-filled
+Bugsee.showReportDialog("Smoke test", "Verifying Bugsee KMP setup", BugseeSeverity.Medium)
+```
+
+Valid `BugseeSeverity` values are `VeryLow`, `Medium`, `High`, `Critical`, and `Blocker`.
+
+### 3. Verify exception and crash capture
+
+A handled exception is the safest check — it does not terminate the app:
+
+```kotlin
+try {
+    (null as String?)!!.length
+} catch (ex: Exception) {
+    Bugsee.logException(ex)
+}
+```
+
+For an uncaught crash, be aware of a Compose Multiplatform gotcha: on Android a throwable raised synchronously inside a `Modifier.clickable` lambda is absorbed by the pointer-input coroutine and never reaches `Thread.UncaughtExceptionHandler`, so Bugsee cannot capture it. Throw from a background thread instead — this works uniformly on both targets:
+
+```kotlin
+// commonMain
+expect fun runOnBackgroundThread(block: () -> Unit)
+
+// androidMain — the throwable reaches AndroidRuntime and Bugsee
+actual fun runOnBackgroundThread(block: () -> Unit) {
+    Thread { block() }.start()
+}
+
+// iosMain — the throwable goes through Kotlin/Native's unhandled-exception hook,
+// which Bugsee installs on successful launch when crashReport is enabled
+@OptIn(ExperimentalForeignApi::class)
+actual fun runOnBackgroundThread(block: () -> Unit) {
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT.toLong(), 0u)) {
+        block()
+    }
+}
+
+// Test: remove after verifying
+runOnBackgroundThread { throw RuntimeException("Bugsee KMP smoke test") }
+```
+
+Relaunch the app afterwards — crash reports are uploaded on the next start.
+
+### 4. If nothing arrives
+
+**Android** — check logcat for the KMP layer's own diagnostics:
+
+```bash
+adb logcat -s BugseeInternal
+```
+
+`Bugsee KMP: cannot launch() — applicationContext is not gathered` means `launch()` ran before the SDK's internal `ContentProvider` captured the application context. Call `launch()` from `Application.onCreate()` (not `attachBaseContext()`), and confirm `android:name` on the `<application>` tag actually points at your `Application` subclass.
+
+**iOS** — the KMP layer logs through `NSLog` with a `DEBUG: [BugseeInternal] …` / `ERROR: [BugseeInternal] …` prefix. Filter the Xcode console for `BugseeInternal`.
+
+Finally, check the Bugsee dashboard for the incoming reports.
+
+---
+
 ## Documentation Links
 
 - [Installation](https://docs.bugsee.com/sdk/kmp/installation/)
