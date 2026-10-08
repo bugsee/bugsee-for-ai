@@ -27,7 +27,7 @@ For the platform-by-platform symbol-upload story, use [`bugsee-upload-symbols`](
 Check for an existing install first — a build plugin may have already placed one:
 
 ```bash
-bugsee-cli --version    # -> "bugsee-cli 0.8.0"
+bugsee-cli --version    # -> "bugsee-cli 0.8.1"
 ```
 
 | Channel | Command | Use for |
@@ -64,8 +64,9 @@ Integrations activate a new capability by pinning a **minimum CLI version**. Bef
 | `upload build` without `--artifact`; `debug-files upload --extension <suffix>` | **0.7.12** |
 | `npx @bugsee/cli` one-shot guidance; `build-env machine-label` hostname on macOS/Windows | **0.7.13** |
 | `--type elf` directories / `native-debug-symbols.zip`; IL2CPP `LineNumberMappings.json` validation (exit 11); collect-all-before-upload; nil-UUID dSYM slices skipped | **0.8.0** |
+| `--type elf` upgrades a stored `SYMBOL_TABLE` (`.so.sym`) to full debug info on its own — no `--force`; the run logs `upgraded SYMBOL_TABLE -> FULL` (needs the matching server update, see below) | **0.8.1** |
 
-Current release: **0.8.0** (npm `latest` on both `@bugsee/cli` and `@bugsee/bugsee-cli`, tag `v0.8.0`; published 2026-10-07). When a script needs a floor, gate on it:
+Current release: **0.8.1** (npm `latest` on both `@bugsee/cli` and `@bugsee/bugsee-cli`, tag `v0.8.1`; published 2026-10-08). When a script needs a floor, gate on it:
 
 ```bash
 bugsee-cli --version   # parse the X.Y.Z and compare, or just require a known-good install
@@ -123,13 +124,13 @@ bugsee-cli debug-files upload ./dist --type sourcemaps \
     --version 1.4.0 --build 1400
 ```
 
-`--version` and `--build` are required and must match the **shipped build** — a mismatch uploads a symbol that never resolves a crash. A symbol the server already has is skipped and the batch continues, so rebuilding uploads only what changed; `--force` re-uploads anyway (honoured for `--type elf` from **0.7.12** — needed when replacing `SYMBOL_TABLE` `.so.sym` with `FULL` of the same GNU build-id). `--dry-run` discovers and packs without uploading.
+`--version` and `--build` are required and must match the **shipped build** — a mismatch uploads a symbol that never resolves a crash. A symbol the server already has is skipped and the batch continues, so rebuilding uploads only what changed; `--force` re-uploads anyway (honoured for `--type elf` from **0.7.12**). For `--type elf` it is **no longer needed to replace `SYMBOL_TABLE` `.so.sym` with `FULL`** of the same GNU build-id: from **0.8.1** each library declares whether it carries debug info or only a symbol table (read from the file, not its name) and the server replaces the poorer stored copy — the bytes transfer once, the run logs `upgraded SYMBOL_TABLE -> FULL`, and an unchanged or poorer file transfers nothing (never a downgrade). Reach for `--force` only to re-send everything, or against a server without that behaviour — there a skipped `FULL` library is reported with a `re-run with --force` hint. `--dry-run` discovers and packs without uploading.
 
 `--extension <suffix>` (0.7.12+, repeatable or comma-separated; leading `.` optional) also picks up files whose name ends in a spelling the `--type` does not yet know. It only widens the name match; each type's content check still applies.
 
 ### Native ELF
 
-`--type elf` uploads each library as its own symbol, keyed by its GNU build-id. From **0.8.0** pass a directory (walked recursively for `.so` / `.so.dbg` / `.so.sym`, plus any `--extension`) — typically AGP `build/intermediates/merged_native_libs/<variant>` — or an AGP `native-debug-symbols.zip`, and mix them in one command. Libraries are read in place (memory-mapped; the directory must be finished build output). When several files share a build-id, only the richest is uploaded (DWARF, then a symbol table, then the larger file).
+`--type elf` uploads each library as its own symbol, keyed by its GNU build-id. From **0.8.0** pass a directory (walked recursively for `.so` / `.so.dbg` / `.so.sym`, plus any `--extension`) — typically AGP `build/intermediates/merged_native_libs/<variant>` — or an AGP `native-debug-symbols.zip`, and mix them in one command. Libraries are read in place (memory-mapped; the directory must be finished build output). When several files share a build-id, only the richest is uploaded (DWARF, then a symbol table, then the larger file). A symbol table already stored for a build-id is upgraded by a later DWARF upload from 0.8.1 with no `--force` (above); `--type rust` does not take part yet, and a library with only dynamic symbols counts as a symbol table.
 
 **`--uuid` is still required** (exit 20 without it): `--help` on 0.8.0 and the binary both demand the Gradle plugin's `BUILD_UUID` from the SDK asset channel, even though each `.so` is then keyed by GNU build-id. Do not invent one — take it from the plugin. A library with no build-id (or a non-ELF file) is skipped with a warning.
 
