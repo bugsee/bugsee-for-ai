@@ -5,7 +5,8 @@ name: Notify docs
 # open its sync PR right away instead of waiting for its scheduled poll.
 #
 # Authenticates as a GitHub App (not a person): the app's client ID is the repository VARIABLE
-# SYNC_APP_CLIENT_ID and its private key is the repository SECRET SYNC_APP_PRIVATE_KEY. The app
+# SYNC_APP_CLIENT_ID and its private key is the SECRET SYNC_APP_PRIVATE_KEY of the "skills-sync"
+# environment (restricted to the main branch, so a feature-branch workflow cannot read it). The app
 # needs "Contents: write" on bugsee/docs only (that is what repository_dispatch requires). A
 # short-lived token is minted per run and scoped down to that one repo.
 #
@@ -25,6 +26,8 @@ jobs:
   notify:
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    # The app's private key lives in this environment, which only the main branch may use.
+    environment: skills-sync
     env:
       SYNC_APP_CLIENT_ID: ${{ vars.SYNC_APP_CLIENT_ID }}
       SYNC_APP_PRIVATE_KEY: ${{ secrets.SYNC_APP_PRIVATE_KEY }}
