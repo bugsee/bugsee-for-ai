@@ -129,7 +129,7 @@ A Cordova crash can land in the web layer or the native one, and each needs its 
 **JavaScript — source maps**, via the [Bugsee CLI](../bugsee-cli/SKILL.md):
 
 ```bash
-npm i -D @bugsee/cli@0.8.0
+npm i -D @bugsee/cli@0.8.1
 npx bugsee-cli sourcemaps inject <build-output-dir>
 npx bugsee-cli debug-files upload <build-output-dir> --type sourcemaps \
     --version 1.4.0 --build 1400

@@ -105,7 +105,7 @@ bugsee-cli debug-files upload ./app/build/intermediates/merged_native_libs --typ
     --uuid <build-uuid> --version 1.4.0 --build 1400
 ```
 
-`--type elf` still requires `--uuid` (exit 20 without it on 0.8.0 — the Gradle plugin's `BUILD_UUID` in the SDK asset channel). Each library is then keyed by its **GNU build-id**, so an unchanged `.so` is skipped before transfer. From 0.8.0 pass a directory (walked recursively for `.so` / `.so.dbg` / `.so.sym`) or a `native-debug-symbols.zip`, and mix them in one command. `--extension` (0.7.12+) adds extra suffixes. A library without a build-id is skipped with a warning. Switching `SYMBOL_TABLE` (`.so.sym`) to `FULL` of the same build-id needs `--force` (0.7.12+). An empty directory or a missing path is exit 10; a corrupt zip is exit 11 before anything uploads. Do not invent a UUID — take it from the plugin.
+`--type elf` still requires `--uuid` (exit 20 without it on 0.8.0 — the Gradle plugin's `BUILD_UUID` in the SDK asset channel). Each library is then keyed by its **GNU build-id**, so an unchanged `.so` is skipped before transfer. From 0.8.0 pass a directory (walked recursively for `.so` / `.so.dbg` / `.so.sym`) or a `native-debug-symbols.zip`, and mix them in one command. `--extension` (0.7.12+) adds extra suffixes. A library without a build-id is skipped with a warning. Switching `SYMBOL_TABLE` (`.so.sym`) to `FULL` of the same build-id needs no `--force` from 0.8.1: the richer file replaces the stored one (the bytes transfer once; the run logs `upgraded SYMBOL_TABLE -> FULL`), and an unchanged or poorer file transfers nothing. Before 0.8.1, or against a server without the matching update, it needs `--force` (0.7.12+). An empty directory or a missing path is exit 10; a corrupt zip is exit 11 before anything uploads. Do not invent a UUID — take it from the plugin.
 
 ---
 
@@ -140,10 +140,10 @@ Maps upload several at a time on CLI 0.7.10+; `--concurrency N` sets a ceiling a
 
 Use `bugsee-cli` for React Native only when the bundle is emitted with a `.js` name. For web and other JS builds it is the better choice, since one binary covers JS maps *and* the native symbols the same app needs.
 
-Pin the CLI rather than floating on latest — current release **0.8.0**:
+Pin the CLI rather than floating on latest — current release **0.8.1**:
 
 ```bash
-npm i -D @bugsee/cli@0.8.0     # then: npx bugsee-cli sourcemaps inject ...
+npm i -D @bugsee/cli@0.8.1     # then: npx bugsee-cli sourcemaps inject ...
 # one-shot without a project install: npx @bugsee/cli  (bare npx bugsee-cli E404s)
 ```
 
