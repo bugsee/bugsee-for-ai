@@ -90,7 +90,7 @@ It discovers every bundle recursively and skips ones the server already has. The
 The **Bugsee Android Gradle plugin** is the right answer for a Gradle project: applied to the app module, it uploads the R8/ProGuard mapping on each release build using the app token, and NDK symbols when enabled.
 
 - Docs: [Gradle plugin](https://docs.bugsee.com/sdk/android/gradle-plugin/)
-- Apply `id("com.bugsee.android.gradle")` and set the token in the `bugsee { }` DSL via `appToken("<your-app-token>")`. **Match the plugin line to the SDK line** — plugin **4.x** for SDK 7.x (pin **4.0.7**; 4.0.6 silently disables every SDK extension), plugin **3.x** (latest 3.6) for SDK 6.x and for KMP 0.1.2, which wraps Android SDK 6.0.4 ([compatibility](https://docs.bugsee.com/sdk/android/gradle-plugin/requirements/)).
+- Apply `id("com.bugsee.android.gradle")` and set the token in the `bugsee { }` DSL via `appToken("<your-app-token>")`. **Match the plugin line to the SDK line** — plugin **4.x** for SDK 7.x (pin **4.0.8**; 4.0.6 silently disables every SDK extension), plugin **3.x** (latest 3.6) for SDK 6.x and for KMP 0.1.2, which wraps Android SDK 6.0.4 ([compatibility](https://docs.bugsee.com/sdk/android/gradle-plugin/requirements/)).
 - Enable native symbols with `ndk { enabled.set(true) }` on 4.x, or the boolean `ndk(true)` on 3.x — the wrong form fails to compile.
 
 Without Gradle — a prebuilt APK, or a CI job that only has the artifacts:

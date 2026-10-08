@@ -14,7 +14,7 @@ allowed-tools: Bash, Read, Edit, Write, WebFetch, Glob, Grep
 
 Opinionated wizard that scans the Android project and wires up Bugsee 7.x — core SDK, Gradle plugin, extension modules for network clients / Compose / feedback / NDK, APM, and manifest-based auto-launch.
 
-> **7.x is the current Android SDK** (`com.bugsee:bugsee-android:7.3.0`, Gradle plugin `com.bugsee.android.gradle` / `com.bugsee:bugsee-android-gradle-plugin:4.0.7`, re-verified 2026-09-30 on Maven Central and Plugin Portal; SDK lastUpdated 2026-09-29, plugin 2026-09-19) and the default for new and existing apps. Keep the two pins paired — the plugin's Compose launch crash fix (4.0.6+) requires SDK 7.1.4+; **7.3.0** satisfies that. **Never pin plugin 4.0.6** — it silently disables every SDK extension (see Phase 2). Plugin latest is still **4.0.7** (no 4.0.8+ on either registry; 7.3.0 does not require a plugin bump). 7.3.0 is a security/reliability release — upgrade apps on 7.0.0-beta1 through 7.2.0. It is plugin-based with a new API. If you are maintaining an app still pinned to the 6.x line, use the legacy [6.x skill](../bugsee-android-sdk-6x/SKILL.md) instead; when upgrading from 6.x, follow the [migration guide](https://docs.bugsee.com/sdk/android/migration/).
+> **7.x is the current Android SDK** (`com.bugsee:bugsee-android:7.3.0`, Gradle plugin `com.bugsee.android.gradle` / `com.bugsee:bugsee-android-gradle-plugin:4.0.8`, re-verified 2026-10-08 on Maven Central; SDK lastUpdated 2026-09-29, plugin 2026-10-08) and the default for new and existing apps. Keep the two pins paired — the plugin's Compose launch crash fix (4.0.6+) requires SDK 7.1.4+; **7.3.0** satisfies that. **Never pin plugin 4.0.6** — it silently disables every SDK extension (see Phase 2). Plugin latest is **4.0.8** (7.3.0 does not require a plugin bump). 7.3.0 is a security/reliability release — upgrade apps on 7.0.0-beta1 through 7.2.0. It is plugin-based with a new API. If you are maintaining an app still pinned to the 6.x line, use the legacy [6.x skill](../bugsee-android-sdk-6x/SKILL.md) instead; when upgrading from 6.x, follow the [migration guide](https://docs.bugsee.com/sdk/android/migration/).
 
 ## Invoke This Skill When
 
@@ -89,7 +89,7 @@ Decision table:
 
 ### Step 1 — Apply the Bugsee Gradle plugin (mandatory)
 
-7.x requires the plugin. Without it, APM, main-thread misuse detection, log capture rewrites, OkHttp injection, and Compose secure redaction do not work. Pin plugin **4.0.7** with SDK **7.3.0** (plugin still the current Plugin Portal / Maven release as of 2026-09-30; keep the two pins paired). Plugin 4.x pairs with SDK 7.x; do not mix with plugin 3.x / SDK 6.x. There is no separate Gradle-plugin skill — apply the notes below from the [plugin release notes](https://docs.bugsee.com/sdk/android/gradle-plugin/releases/).
+7.x requires the plugin. Without it, APM, main-thread misuse detection, log capture rewrites, OkHttp injection, and Compose secure redaction do not work. Pin plugin **4.0.8** with SDK **7.3.0** (current Maven Central release as of 2026-10-08; keep the two pins paired). Do not stay on 4.0.7: it pins bugsee-cli 0.6.0, which silently uploads nothing for NDK `SYMBOL_TABLE` symbols when the CLI's auto-update is off or its download host is unreachable; 4.0.8 pins bugsee-cli 0.8.1. Plugin 4.x pairs with SDK 7.x; do not mix with plugin 3.x / SDK 6.x. There is no separate Gradle-plugin skill — apply the notes below from the [plugin release notes](https://docs.bugsee.com/sdk/android/gradle-plugin/releases/).
 
 **Kotlin DSL (`app/build.gradle.kts`):**
 
@@ -97,7 +97,7 @@ Decision table:
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
-    id("com.bugsee.android.gradle") version "4.0.7"
+    id("com.bugsee.android.gradle") version "4.0.8"
 }
 
 bugsee {
@@ -125,7 +125,7 @@ bugsee {
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
-    id 'com.bugsee.android.gradle' version '4.0.7'
+    id 'com.bugsee.android.gradle' version '4.0.8'
 }
 
 bugsee {
@@ -148,13 +148,13 @@ pluginManagement {
 
 With the plugin applied, the core `com.bugsee:bugsee-android` artifact is auto-pulled (bounded to the same MAJOR.MINOR series as the plugin's `sdk-min-version`). Dependency-driven extensions (OkHttp, Ktor 2/3, Cronet, Compose) are auto-installed when the matching library is in the graph. Feedback, NDK, and leak are **not** dependency-driven — enable them with the DSL toggles above.
 
-From plugin **4.0.6** (carried into 4.0.7): variants that do **not** include Bugsee (e.g. `debugImplementation` only) are no longer instrumented or wired. Flavors are handled the same way. Plain `implementation` is unchanged — do not invent extra plugin flags for that case. The Compose launch crash fix requires SDK **7.1.4+**; **7.3.0** satisfies that — do not pair plugin 4.0.6+ with an older 7.1.x SDK. No DSL changes. Plugin latest is still **4.0.7** (Maven Central / Plugin Portal lastUpdated 2026-09-19; re-verified 2026-09-30).
+From plugin **4.0.6** (carried into 4.0.7 and 4.0.8): variants that do **not** include Bugsee (e.g. `debugImplementation` only) are no longer instrumented or wired. Flavors are handled the same way. Plain `implementation` is unchanged — do not invent extra plugin flags for that case. The Compose launch crash fix requires SDK **7.1.4+**; **7.3.0** satisfies that — do not pair plugin 4.0.6+ with an older 7.1.x SDK. No DSL changes. Plugin latest is **4.0.8** (Maven Central lastUpdated 2026-10-08; re-verified 2026-10-08).
 
 > **Plugin 4.0.6 is broken — upgrade it on sight.** In apps built against the published SDK, 4.0.6 stripped the extension providers from the manifest without registering the extensions in their place: **NDK crash reporting, feedback, Compose, OkHttp, Ktor, Cronet and leak detection never ran**, with a green build and a normally working app. Because the Compose extension never installed, content marked `bugseeSecure` was **not masked** in report screenshots. 4.0.7 fixes it. If an app is on 4.0.6 and cannot move yet, stay on 4.0.5 or set `optimizeExtensionsLoading.set(false)` in `bugsee {}`. Also in 4.0.7 ([release notes](https://docs.bugsee.com/sdk/android/gradle-plugin/releases/)):
 > - Only Bugsee's own extension providers are consolidated — a `Bugsee<Something>InitProvider` in the app or a wrapper SDK is no longer silently removed (4.0.0-beta10 → 4.0.6 removed them).
 > - If the plugin would strip extension providers it cannot register (e.g. an SDK older than 7.0.0-beta11 declared with a non-literal version such as `7.+`), the build now **fails** naming the providers and pointing at `optimizeExtensionsLoading` — that error means "pin a literal SDK version", not "disable the plugin".
 > - The built-in fallback uploader treats the server's "already uploaded" reply as success, so an unchanged mapping is no longer re-uploaded on every build.
-> - The auto-added SDK floor is still 7.2.0 (plugin 4.0.7). Auto-pull on `[7.2.0,8.0.0)` can resolve 7.3.0, but pin **7.3.0** explicitly so the security release is locked.
+> - The auto-added SDK floor is still 7.2.0 (plugin 4.0.8). Auto-pull on `[7.2.0,8.0.0)` can resolve 7.3.0, but pin **7.3.0** explicitly so the security release is locked.
 
 ### Step 2 — Pin the core SDK (recommended)
 
@@ -181,9 +181,9 @@ dependencies {
 
 To suppress auto-install of a dependency-driven extension, set the corresponding flag in `bugsee { instrumentation { ... } }` (e.g. `cronet.set(false)`). To opt out of core auto-pull entirely, `sdkAutoLoad.set(false)`.
 
-> **Current stable releases (re-verified 2026-09-30 against Maven Central and Plugin Portal; SDK lastUpdated 2026-09-29):** SDK `com.bugsee:bugsee-android:7.3.0` (and matching `bugsee-android-compose`, `bugsee-android-ndk`, `bugsee-android-feedback`, `bugsee-android-okhttp`, `bugsee-android-ktor-2`, `bugsee-android-ktor-3`, `bugsee-android-cronet`, `bugsee-android-leak` at **7.3.0**) and Gradle plugin `4.0.7` (`com.bugsee:bugsee-android-gradle-plugin` / Plugin Portal `com.bugsee.android.gradle`; plugin lastUpdated 2026-09-19). The plugin tracks its own 4.x line, separate from the SDK — pin both together. 7.3.0 does not require a plugin bump.
+> **Current stable releases (re-verified 2026-10-08 against Maven Central; SDK lastUpdated 2026-09-29):** SDK `com.bugsee:bugsee-android:7.3.0` (and matching `bugsee-android-compose`, `bugsee-android-ndk`, `bugsee-android-feedback`, `bugsee-android-okhttp`, `bugsee-android-ktor-2`, `bugsee-android-ktor-3`, `bugsee-android-cronet`, `bugsee-android-leak` at **7.3.0**) and Gradle plugin `4.0.8` (`com.bugsee:bugsee-android-gradle-plugin` / Plugin Portal `com.bugsee.android.gradle`; plugin lastUpdated 2026-10-08). The plugin tracks its own 4.x line, separate from the SDK — pin both together. 7.3.0 does not require a plugin bump.
 >
-> **SDK 7.3.0 / plugin 4.0.7 — cite, do not invent APIs.** [Android SDK 7.3.0](https://docs.bugsee.com/sdk/android/release-notes/) is a security and reliability release; the public API is **additive**. [Gradle plugin 4.0.7](https://docs.bugsee.com/sdk/android/gradle-plugin/releases/) remains the latest fix release — no DSL changes. Agents should **not** advise workarounds 7.1.4 / 4.0.6 made unnecessary:
+> **SDK 7.3.0 / plugin 4.0.8 — cite, do not invent APIs.** [Android SDK 7.3.0](https://docs.bugsee.com/sdk/android/release-notes/) is a security and reliability release; the public API is **additive**. [Gradle plugin 4.0.8](https://docs.bugsee.com/sdk/android/gradle-plugin/releases/) is the latest release (it adopts bugsee-cli 0.8.1 and fixes NDK symbol uploads). Agents should **not** advise workarounds 7.1.4 / 4.0.6 made unnecessary:
 > - **Upgrade from 7.2.0 (and any 7.0.0-beta1+).** The SDK internal log attached to reports no longer records app HTTP URLs (including embedded credentials and query strings), `setUserIdentifier` / `setAttribute` values, performance-transaction URLs, or filter/listener text. Data written by an earlier 7.x is deleted on the first 7.3.0 launch and never attached. Recommend the upgrade; do not invent a third-party leak — it stayed in the app's own Bugsee project.
 > - **Ktor.** 7.2.0 `bugsee-android-ktor-2` / `bugsee-android-ktor-3` did not compile `install(BugseeKtor2Plugin)`, `install(BugseeKtor3Plugin.Plugin)`, or `bugseeWebSocket` in Kotlin apps. Pin **7.3.0**.
 > - **Pending-report caps (defaults on).** `MaxDataSize` (150 MB), `MaxPendingReports` (30), `MaxPendingReportAge` (30 days). Past a limit, oldest unsent reports are deleted (errors before bugs before crashes). A device offline more than 30 days now drops the oldest instead of keeping them all.
@@ -302,7 +302,7 @@ Native crash detection is **not** in the core artifact. Enable it with the plugi
 
 ### WebSocket
 
-OkHttp `newWebSocket(...)` traffic (connection lifecycle, frames, close/error) is captured automatically when the OkHttp extension is installed (Gradle plugin **4.0.3+**; use 4.0.7 — 4.0.6 never registered the OkHttp extension). Ktor on the OkHttp engine is automatic; on CIO, route calls through the `bugseeWebSocket` helper. `NetworkEventStage.WebSocket` is the stage value for custom events.
+OkHttp `newWebSocket(...)` traffic (connection lifecycle, frames, close/error) is captured automatically when the OkHttp extension is installed (Gradle plugin **4.0.3+**; use 4.0.8 — 4.0.6 never registered the OkHttp extension). Ktor on the OkHttp engine is automatic; on CIO, route calls through the `bugseeWebSocket` helper. `NetworkEventStage.WebSocket` is the stage value for custom events.
 
 ### `FLAG_SECURE`
 
