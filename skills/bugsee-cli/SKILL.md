@@ -27,20 +27,22 @@ For the platform-by-platform symbol-upload story, use [`bugsee-upload-symbols`](
 Check for an existing install first — a build plugin may have already placed one:
 
 ```bash
-bugsee-cli --version    # -> "bugsee-cli 0.7.11"
+bugsee-cli --version    # -> "bugsee-cli 0.8.0"
 ```
 
 | Channel | Command | Use for |
 |---|---|---|
 | Installer script | `curl --proto '=https' --tlsv1.2 -sSfL https://download.bugsee.com/cli/install.sh \| sh` | macOS / Linux, generic CI |
 | Installer script | `powershell -ExecutionPolicy ByPass -c "irm https://download.bugsee.com/cli/install.ps1 \| iex"` | Windows |
-| npm | `npm i -D @bugsee/cli` then `npx bugsee-cli` | JS toolchains — React Native, Cordova, Capacitor, web |
+| npm | `npm i -D @bugsee/cli` then `npx bugsee-cli`; one-shot: `npx @bugsee/cli` | JS toolchains — React Native, Cordova, Capacitor, web |
 | Homebrew | Bugsee tap | macOS developer machines |
 | Maven Central / NuGet / UPM | bundled by the plugin | Android Gradle, .NET MAUI, Unity |
 
 Both installers download and **SHA-256-verify** the binary for the host from `download.bugsee.com` — no GitHub dependency. Override with `BUGSEE_CLI_VERSION` (pin an exact `X.Y.Z`), `BUGSEE_CLI_INSTALL_DIR`, or `BUGSEE_CLI_BASE_URL` (internal mirror).
 
 **Prefer `@bugsee/cli` over `@bugsee/bugsee-cli` in JS projects.** `@bugsee/cli` ships the binary in per-platform packages declared as `optionalDependencies`, so npm resolves exactly one and **nothing runs at install time** — it works under `--ignore-scripts`, under a lockfile-pinned CI install, and offline from a warm cache. `@bugsee/bugsee-cli` is the older single package whose `postinstall` downloads the binary on every fresh install; it still works and is still published, but it needs network at install time and does nothing under `--ignore-scripts`.
+
+**`npx @bugsee/cli` vs `npx bugsee-cli`.** A one-shot run without adding it to a project is `npx @bugsee/cli` (the scoped package). After `npm i -D @bugsee/cli`, `npx bugsee-cli` works because the package provides that binary. A bare `npx bugsee-cli` *outside* a project that installed it looks up an unscoped `bugsee-cli` package and fails with `E404` (CLI 0.7.13+ guidance; confirmed in the `@bugsee/cli` README).
 
 Published platforms: macOS arm64 + x86_64, Linux x86_64 + aarch64, Windows x86_64 + arm64.
 
@@ -59,8 +61,11 @@ Integrations activate a new capability by pinning a **minimum CLI version**. Bef
 | `sourcemaps inject` registers a debug ID another tool (Rollup 4) wrote | **0.7.9** |
 | `debug-files upload --type sourcemaps --concurrency N` / `--allow-empty` | **0.7.10** |
 | `sourcemaps inject --exclude <glob>` / `--allow-sri`; `debug-files upload --strip-sources-content`; a sourcemaps `--dry-run` that tolerates un-keyed maps | **0.7.11** |
+| `upload build` without `--artifact`; `debug-files upload --extension <suffix>` | **0.7.12** |
+| `npx @bugsee/cli` one-shot guidance; `build-env machine-label` hostname on macOS/Windows | **0.7.13** |
+| `--type elf` directories / `native-debug-symbols.zip`; IL2CPP `LineNumberMappings.json` validation (exit 11); collect-all-before-upload; nil-UUID dSYM slices skipped | **0.8.0** |
 
-Current release: **0.7.11** (npm `latest`, tag `v0.7.11`). The CLI's `main` already carries a 0.7.12 changelog entry (`upload build` without `--artifact`), but it is not published — do not write it into a script until `npm view @bugsee/cli version` shows it. When a script needs a floor, gate on it:
+Current release: **0.8.0** (npm `latest` on both `@bugsee/cli` and `@bugsee/bugsee-cli`, tag `v0.8.0`; published 2026-10-07). When a script needs a floor, gate on it:
 
 ```bash
 bugsee-cli --version   # parse the X.Y.Z and compare, or just require a known-good install
@@ -91,7 +96,7 @@ Prefer the environment variable in CI so the token never lands in a log or a she
 | `sourcemaps inject <paths>...` | Embed a deterministic debug ID into JS bundles and their `.map` files. Run before the upload |
 | `xcode post-action` | The whole iOS build-publish flow from an Xcode scheme post-action — build registration, build-info, dSYMs, size analysis, size gate |
 | `xcode upload-dsyms` | dSYMs only, from an Xcode Run Script **build phase**, with no build registration |
-| `upload build` / `upload build-info` | Build artefact (size analysis) and the per-build metadata bundle |
+| `upload build` / `upload build-info` | Build artefact (size analysis) and the per-build metadata bundle. From **0.7.12**, `upload build` may omit `--artifact` to register without shipping bytes; `--mapping` / `--chunked` / `--out` then exit 20 |
 | `pack` | Pack an artefact + mapping into the upload ZIP locally, without uploading |
 | `vcs-metadata` | Resolve provider / commit SHA / branch / PR from CI env vars or `git`. JSON to stdout |
 | `ios-deps collect` | Parse `Podfile.lock` / `Package.resolved` / `Cartfile.resolved` / vendored frameworks. JSON to stdout |
@@ -118,7 +123,28 @@ bugsee-cli debug-files upload ./dist --type sourcemaps \
     --version 1.4.0 --build 1400
 ```
 
-`--version` and `--build` are required and must match the **shipped build** — a mismatch uploads a symbol that never resolves a crash. A symbol the server already has is skipped and the batch continues, so rebuilding uploads only what changed; `--force` re-uploads anyway. `--dry-run` discovers and packs without uploading.
+`--version` and `--build` are required and must match the **shipped build** — a mismatch uploads a symbol that never resolves a crash. A symbol the server already has is skipped and the batch continues, so rebuilding uploads only what changed; `--force` re-uploads anyway (honoured for `--type elf` from **0.7.12** — needed when replacing `SYMBOL_TABLE` `.so.sym` with `FULL` of the same GNU build-id). `--dry-run` discovers and packs without uploading.
+
+`--extension <suffix>` (0.7.12+, repeatable or comma-separated; leading `.` optional) also picks up files whose name ends in a spelling the `--type` does not yet know. It only widens the name match; each type's content check still applies.
+
+### Native ELF
+
+`--type elf` uploads each library as its own symbol, keyed by its GNU build-id. From **0.8.0** pass a directory (walked recursively for `.so` / `.so.dbg` / `.so.sym`, plus any `--extension`) — typically AGP `build/intermediates/merged_native_libs/<variant>` — or an AGP `native-debug-symbols.zip`, and mix them in one command. Libraries are read in place (memory-mapped; the directory must be finished build output). When several files share a build-id, only the richest is uploaded (DWARF, then a symbol table, then the larger file).
+
+**`--uuid` is still required** (exit 20 without it): `--help` on 0.8.0 and the binary both demand the Gradle plugin's `BUILD_UUID` from the SDK asset channel, even though each `.so` is then keyed by GNU build-id. Do not invent one — take it from the plugin. A library with no build-id (or a non-ELF file) is skipped with a warning.
+
+```bash
+bugsee-cli debug-files upload ./app/build/intermediates/merged_native_libs --type elf \
+    --uuid <build-uuid> --version 1.4.0 --build 1400
+```
+
+Directory with no matching libraries, or a path that does not exist: exit **10**. A corrupt zip or an I/O error while scanning: exit **11**, and 0.8.0 collects every input **before** uploading anything. An empty zip only warns. Directory symlinks are not followed.
+
+### IL2CPP line maps and dSYMs
+
+`--type il2cpp-linemap` (0.8.0+) validates `LineNumberMappings.json` before packing (`cpp_path` → `cs_path` → `{ cpp_line: cs_line }`, non-negative integers; optional `__debug-id__` ignored). A truncated, empty, or wrong file exits **11** — including in a dry run — and uploads nothing.
+
+A Mach-O slice with no `LC_UUID` is skipped rather than registered as the all-zero UUID; a bundle with no usable slice is rejected and fails an `xcode upload-dsyms` build phase.
 
 ### Source maps, specifically
 
@@ -139,7 +165,9 @@ Three behaviours worth knowing before wiring this into a build:
 - **Nothing to upload is an error too**, unless `--allow-empty` says otherwise. Use it for a monorepo package that legitimately builds without maps.
 - **A map without a debug ID fails the run** before anything uploads — it means `inject` never stamped that bundle. Stylesheet and type-declaration maps (`.css.map`, `.d.ts.map`, …) are skipped, not failed. On 0.7.11+ a `--dry-run` reports and counts such maps (`unkeyed`) instead of exiting 11, so `inject --dry-run` → `upload --dry-run` works as a preview on a fresh build; a real run still exits 11.
 
-**`--strip-sources-content`** (0.7.11+) uploads each map without its embedded `sourcesContent` — file/line/column still resolve, the source snippet is dropped, for teams who do not want source leaving the build machine. The map on disk is untouched; indexed maps' `sections[].map` are stripped too.
+**`--strip-sources-content`** (0.7.11+) uploads each map without its embedded `sourcesContent` — file/line/column still resolve, the source snippet is dropped, for teams who do not want source leaving the build machine. The map on disk is untouched; indexed maps' `sections[].map` are stripped too. From 0.8.0 a map that cannot be processed is uploaded unstripped with a warning rather than silently skipped.
+
+From 0.8.0 `inject` edits in place (permissions/symlinks kept) and refuses an unusable map **before** touching the bundle, so a failed run never leaves a bundle stamped with an ID its map did not get.
 
 `--concurrency`, `--allow-empty` and `--strip-sources-content` are rejected (exit 20) for any other `--type`, rather than accepted and ignored.
 
@@ -179,4 +207,4 @@ The metadata resolvers exit 0 with empty output (`[]`, `{}`, `null`, empty strin
 - [Debug information files](https://docs.bugsee.com/cli/debug-files/) · [Source maps](https://docs.bugsee.com/cli/sourcemaps/) · [Builds](https://docs.bugsee.com/cli/builds/)
 - [iOS build publishing](https://docs.bugsee.com/cli/xcode/) · [Metadata resolvers](https://docs.bugsee.com/cli/metadata/) · [Exit codes](https://docs.bugsee.com/cli/exit-codes/) · [Self-update](https://docs.bugsee.com/cli/update/)
 
-The docs site covers the CLI through 0.7.10 (`xcode upload-dsyms`, `--concurrency`, `--allow-empty` included); the 0.7.11 additions — `--exclude`, `--allow-sri`, `--strip-sources-content` — are not on it yet. **`bugsee-cli <command> --help` is authoritative for the installed version**; check it before telling a user a flag does not exist.
+The docs site covers the CLI through **0.8.0** (release notes for 0.7.11–0.8.0, `--exclude` / `--allow-sri` / `--strip-sources-content`, `--extension`, ELF directories/zips, `upload build` without `--artifact`, IL2CPP validation, exit codes). **`bugsee-cli <command> --help` is authoritative for the installed version**; check it before telling a user a flag does not exist. On 0.8.0 that help still requires `--uuid` for `--type elf` even where a docs example omits it — follow the binary.

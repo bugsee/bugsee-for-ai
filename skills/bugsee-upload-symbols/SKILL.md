@@ -100,12 +100,12 @@ Without Gradle — a prebuilt APK, or a CI job that only has the artifacts:
 bugsee-cli debug-files upload ./app/build/outputs/mapping/release \
     --version 1.4.0 --build 1400
 
-# Native ELF symbols — --uuid is required, and must match what the SDK reports
-bugsee-cli debug-files upload ./path/to/libnative.so --type elf \
+# Native ELF (CLI 0.8.0+) — a directory of .so/.so.dbg/.so.sym, or an AGP native-debug-symbols.zip
+bugsee-cli debug-files upload ./app/build/intermediates/merged_native_libs --type elf \
     --uuid <build-uuid> --version 1.4.0 --build 1400
 ```
 
-`--type elf` requires `--uuid` because the upload-side ID must match the one the SDK reports at crash time. The Gradle plugin owns that value; if you are uploading by hand, get it from the plugin's resolved build ID rather than inventing one.
+`--type elf` still requires `--uuid` (exit 20 without it on 0.8.0 — the Gradle plugin's `BUILD_UUID` in the SDK asset channel). Each library is then keyed by its **GNU build-id**, so an unchanged `.so` is skipped before transfer. From 0.8.0 pass a directory (walked recursively for `.so` / `.so.dbg` / `.so.sym`) or a `native-debug-symbols.zip`, and mix them in one command. `--extension` (0.7.12+) adds extra suffixes. A library without a build-id is skipped with a warning. Switching `SYMBOL_TABLE` (`.so.sym`) to `FULL` of the same build-id needs `--force` (0.7.12+). An empty directory or a missing path is exit 10; a corrupt zip is exit 11 before anything uploads. Do not invent a UUID — take it from the plugin.
 
 ---
 
@@ -140,10 +140,11 @@ Maps upload several at a time on CLI 0.7.10+; `--concurrency N` sets a ceiling a
 
 Use `bugsee-cli` for React Native only when the bundle is emitted with a `.js` name. For web and other JS builds it is the better choice, since one binary covers JS maps *and* the native symbols the same app needs.
 
-Pin the CLI rather than floating on latest — current release **0.7.11**:
+Pin the CLI rather than floating on latest — current release **0.8.0**:
 
 ```bash
-npm i -D @bugsee/cli@0.7.11     # then: npx bugsee-cli sourcemaps inject ...
+npm i -D @bugsee/cli@0.8.0     # then: npx bugsee-cli sourcemaps inject ...
+# one-shot without a project install: npx @bugsee/cli  (bare npx bugsee-cli E404s)
 ```
 
 iOS and Android **native** frames in a React Native app still need dSYMs and mapping files — see the sections above.
@@ -170,7 +171,7 @@ bugsee-cli debug-files upload path/to/Symbols/LineNumberMappings.json \
     --uuid <arm64-build-id>,<armeabi-build-id>
 ```
 
-The mapping is keyed by the IL2CPP module UUID(s) (`libil2cpp` / `UnityFramework`) — comma-separate them, or repeat `--uuid`, for a multi-ABI Android build. Sibling `MethodMap.tsv` / `il2cppFileRoot.txt` are picked up automatically when they sit next to the JSON.
+The mapping is keyed by the IL2CPP module UUID(s) (`libil2cpp` / `UnityFramework`) — comma-separate them, or repeat `--uuid`, for a multi-ABI Android build. Sibling `MethodMap.tsv` / `il2cppFileRoot.txt` are picked up automatically when they sit next to the JSON. CLI **0.8.0+** validates the JSON before packing (`cpp_path` → `cs_path` → `{ cpp_line: cs_line }`); a truncated, empty, or wrong file exits **11** and uploads nothing.
 
 - Docs: [Unity crashes](https://docs.bugsee.com/sdk/unity/crashes/)
 

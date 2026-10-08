@@ -14,7 +14,7 @@ allowed-tools: Bash, Read, Edit, Write, WebFetch, Glob, Grep
 
 Opinionated wizard that scans your iOS project and guides you through complete Bugsee setup — bug reporting with video, crash reporting, network monitoring, console logs, APM, and optional build size analysis.
 
-Current stable pin (re-verified 2026-10-07 against the SPM tags and CocoaPods trunk; matches the [6.x release notes](https://docs.bugsee.com/sdk/ios/release-notes/)):
+Current stable pin (re-verified 2026-10-08 against the SPM tags and CocoaPods trunk; matches the [6.x release notes](https://docs.bugsee.com/sdk/ios/release-notes/)):
 
 - **SPM** tag `6.3.2` at `https://github.com/bugsee/spm`
 - **CocoaPods** trunk pod `Bugsee` `6.3.2`
@@ -22,7 +22,17 @@ Current stable pin (re-verified 2026-10-07 against the SPM tags and CocoaPods tr
 
 > **Note:** Always verify against [docs.bugsee.com/sdk/ios/installation/](https://docs.bugsee.com/sdk/ios/installation/) before implementing. Prefer registry tags over the release-notes page when they disagree.
 
-> **7.x is in beta — do not install it unless the user explicitly asks.** Latest SPM tag is `7.0.0-beta5` (also `7.0.0-beta1` / `7.0.0-beta2` / `7.0.0-beta3` / `7.0.0-beta4`) on the same `https://github.com/bugsee/spm` repo; `https://github.com/bugsee/feedback-spm` has matching `7.0.0-beta1` through `7.0.0-beta5` tags. The [7.x release notes](https://docs.bugsee.com/sdk/ios/v7/release-notes/) still only document through beta2 (checked 2026-10-07), including the documented Feedback pin of `7.0.0-beta2` — pair `BugseeFeedback` with the matching core tag, and do not claim features for beta3–beta5 until they appear on docs.bugsee.com. 7.x is a breaking line: every option constant is renamed into the `BugseeOption*` family (hard-coded option strings silently fall back to defaults), Feedback moves to a separate `BugseeFeedback` package (`https://github.com/bugsee/feedback-spm`), `pause`/`resume` and several other methods are removed or renamed, SPM is the only channel (CocoaPods and Carthage are retired), and beta2 raises the minimum to **iOS 15 / tvOS 15**. This skill targets **6.x**; for a 7.x beta install follow the [7.x installation](https://docs.bugsee.com/sdk/ios/v7/installation/), [migration guide](https://docs.bugsee.com/sdk/ios/v7/migration/) and [7.x release notes](https://docs.bugsee.com/sdk/ios/v7/release-notes/) rather than the 6.x code below. An SPM rule of "Up to Next Major" from 6.3.2 never resolves a 7.0.0 pre-release, so existing 6.x apps are not moved by accident.
+> **7.x is in beta — do not install it unless the user explicitly asks.** Latest SPM tag is `7.0.0-beta5` (also beta1–beta4) on `https://github.com/bugsee/spm`; `https://github.com/bugsee/feedback-spm` has matching tags. The [7.x release notes](https://docs.bugsee.com/sdk/ios/v7/release-notes/), [installation](https://docs.bugsee.com/sdk/ios/v7/installation/), and [migration guide](https://docs.bugsee.com/sdk/ios/v7/migration/) now document through **beta5** (checked 2026-10-08). This skill targets **6.x**; for a 7.x beta follow those pages rather than the 6.x code below. Pin both packages with the **Exact Version** rule at the **same** tag (`7.0.0-beta5`) — SPM keeps pre-releases out of version ranges, so "Up to Next Major" from 6.3.2 never resolves a 7.x beta.
+>
+> 7.x is a breaking line. Agent-relevant facts now on docs.bugsee.com:
+> - **Minimum is iOS 15 / tvOS 15** (raised in beta2; beta1's iOS 13 / tvOS 13 floor is obsolete). visionOS 1 unchanged. SPM is the only channel (CocoaPods and Carthage retired).
+> - Every option constant is renamed into the `BugseeOption*` family (hard-coded strings silently fall back to defaults). `pause`/`resume` and several other methods are removed or renamed.
+> - Feedback is a separate package: add `https://github.com/bugsee/feedback-spm` at the same Exact Version as core. Each `BugseeFeedback` release requires that core version exactly.
+> - Nine defaults changed. The ninth (beta3): `BugseeOptionCaptureMachExceptions` is **YES** on iOS and visionOS (set `NO` for BSD signal handlers; tvOS always uses BSD).
+> - Every `BugseeDelegate` method has a new Swift name ([migration §4.6](https://docs.bugsee.com/sdk/ios/v7/migration/)). A 6.x-named Swift implementation compiles but is **never called**.
+> - The `BugseeReport` passed to the delegate is a live handle — mutations are what gets uploaded (`type` is read-only; no public initializer; do not keep it past the callback).
+> - `addSecureRectangle:` drops touches as well as pixels. Multi-window recording (beta4) records every window on screen; convert rectangles to screen coordinates.
+> - `log:level:enforceFiltering:` is renamed `log:level:requiresFiltering:`.
 
 ---
 

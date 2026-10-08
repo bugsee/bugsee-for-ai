@@ -151,7 +151,7 @@ bugsee-cli debug-files upload path/to/Symbols/LineNumberMappings.json \
     --uuid <arm64-build-id>,<armeabi-build-id>
 ```
 
-The mapping is keyed by the IL2CPP module UUID(s) (`libil2cpp` / `UnityFramework`) — comma-separate them, or repeat `--uuid`, for a multi-ABI Android build. Sibling `MethodMap.tsv` / `il2cppFileRoot.txt` are picked up automatically when they sit next to the JSON.
+The mapping is keyed by the IL2CPP module UUID(s) (`libil2cpp` / `UnityFramework`) — comma-separate them, or repeat `--uuid`, for a multi-ABI Android build. Sibling `MethodMap.tsv` / `il2cppFileRoot.txt` are picked up automatically when they sit next to the JSON. CLI **0.8.0+** validates the JSON before packing; a truncated or corrupt file exits **11** and uploads nothing.
 
 Full workflow: [`bugsee-upload-symbols`](../bugsee-upload-symbols/SKILL.md) · [Unity crashes](https://docs.bugsee.com/sdk/unity/crashes/).
 
