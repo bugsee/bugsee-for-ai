@@ -23,7 +23,7 @@ Pull full crash/error/bug context from Bugsee into the editor, root-cause it in 
 
 ## Prerequisites: the Bugsee MCP Server
 
-This skill needs the Bugsee MCP server connected. The issue tools it uses are read-only: `list_applications`, `list_issues`, `get_issue`, and `get_issue_resource` (a presigned URL for an issue's video, screenshot, network log, attachment, or native crash artifact). Diagnose missing or broken symbols with the read-only `get_symbol_by_uuid` tool. The server also exposes build tools — for size, dependency, timing, or vulnerability questions use [`bugsee-build-insights`](../bugsee-build-insights/SKILL.md) instead.
+This skill needs the Bugsee MCP server connected. The issue tools it uses are read-only: `list_applications`, `list_issues`, `get_issue`, and `get_issue_resource` (a presigned URL for an issue's video, screenshot, network log, attachment, or native crash artifact). Inventory uploaded debug files with the read-only `list_symbols` tool; diagnose a specific module UUID with `get_symbol_by_uuid`. The server also exposes build tools — for size, dependency, timing, or vulnerability questions use [`bugsee-build-insights`](../bugsee-build-insights/SKILL.md) instead.
 
 If the tools are not available, help the user connect the server (base URL `https://api.bugsee.com/mcp`):
 
@@ -56,7 +56,7 @@ If you don't already know the application key, call **`list_applications`** (no 
 
 Call **`get_issue`** with `issue_key` when the key is present. Prefer **`issue_id`** (the `id` from `list_issues`) when the key is empty — typical for `missing_sym` issues.
 
-If `symbolication_status` is `"missing_sym"` or frames are raw addresses / `<unknown>`, call **`get_symbol_by_uuid`** with the module/debug UUID from a crash frame (optional `application_id_or_key` to narrow). Matches return in any status (`uploading`, `processing`, `ready`, `broken`, `deleted`), which distinguishes never-uploaded from still-processing or broken. An empty `symbols` array is not proof the file is missing — matches may exist on applications the caller cannot read. Then use [`bugsee-upload-symbols`](../bugsee-upload-symbols/SKILL.md) to upload what's needed; existing issues keep the dump they were created with, so confirmation still requires a new crash.
+If `symbolication_status` is `"missing_sym"` or frames are raw addresses / `<unknown>`, inventory uploads with **`list_symbols`** (`application_id_or_key`; optional `query` / `status` / `sort` / `cursor`) and diagnose the module/debug UUID with **`get_symbol_by_uuid`** (optional `application_id_or_key` to narrow). `list_symbols` browses/filters uploaded debug files; UUID lookup remains `get_symbol_by_uuid` (a partial UUID in `list_symbols` `query` matches nothing, which does not mean it is missing). Matches from `get_symbol_by_uuid` return in any status (`uploading`, `processing`, `ready`, `broken`, `deleted`), which distinguishes never-uploaded from still-processing or broken. An empty `symbols` array is not proof the file is missing — matches may exist on applications the caller cannot read. Then use [`bugsee-upload-symbols`](../bugsee-upload-symbols/SKILL.md) to upload what's needed; existing issues keep the dump they were created with, so confirmation still requires a new crash.
 
 Tuning parameters:
 
@@ -73,7 +73,7 @@ Read the timing, environment, exception details, stack frames, breadcrumbs, netw
 
 - Map the top application stack frames (file, symbol, line) to files in the repo. Skip framework/system frames.
 - Open those files and read the relevant code paths. Use the breadcrumbs, network log, and console log to reconstruct what happened just before the failure.
-- For `subtype` apps (React Native, Flutter, Unity, etc.), match symbolicated frames to the source language. If frames are unsymbolicated/minified (`symbolication_status` of `"missing_sym"`), diagnose the module UUID with `get_symbol_by_uuid`, then use the [`bugsee-upload-symbols`](../bugsee-upload-symbols/SKILL.md) skill and confirm against a **new** crash.
+- For `subtype` apps (React Native, Flutter, Unity, etc.), match symbolicated frames to the source language. If frames are unsymbolicated/minified (`symbolication_status` of `"missing_sym"`), inventory uploads with `list_symbols` and diagnose the module UUID with `get_symbol_by_uuid`, then use the [`bugsee-upload-symbols`](../bugsee-upload-symbols/SKILL.md) skill and confirm against a **new** crash.
 - State the root cause in one or two sentences and cite the exact file and line before changing anything.
 
 ## Step 5: Propose and Apply the Fix
@@ -92,7 +92,7 @@ Read the timing, environment, exception details, stack frames, breadcrumbs, netw
 ## Common Workflows
 
 - **Triage overnight crashes** — `list_issues` with `type:"crash"`, `status:"open"`, `sort:"events_desc"`; summarize the top few, then deep-dive the worst.
-- **Unsymbolicated crash** — `list_issues` showing `symbolication_status:"missing_sym"` (often an empty `key`); fetch with `issue_id`; diagnose the UUID via `get_symbol_by_uuid`; upload via [`bugsee-upload-symbols`](../bugsee-upload-symbols/SKILL.md).
+- **Unsymbolicated crash** — `list_issues` showing `symbolication_status:"missing_sym"` (often an empty `key`); fetch with `issue_id`; inventory uploads with `list_symbols`; diagnose the UUID via `get_symbol_by_uuid`; upload via [`bugsee-upload-symbols`](../bugsee-upload-symbols/SKILL.md).
 - **Regression hunting** — compare `list_issues` filtered by `version` across two releases to find what a release introduced.
 - **Bug report → code change** — start from a `type:"bug"` issue (or `reporter_email`), read its description and attached session, then implement.
 
