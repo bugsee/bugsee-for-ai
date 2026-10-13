@@ -14,7 +14,7 @@ allowed-tools: Bash, Read, Edit, Write, WebFetch, Glob, Grep
 
 Opinionated wizard that scans your iOS project and guides you through complete Bugsee setup — bug reporting with video, crash reporting, network monitoring, console logs, APM, and optional build size analysis.
 
-Current stable pin (re-verified 2026-10-08 against the SPM tags and CocoaPods trunk; matches the [6.x release notes](https://docs.bugsee.com/sdk/ios/release-notes/)):
+Current stable pin (re-verified 2026-10-13 against the SPM tags and CocoaPods trunk; matches the [6.x release notes](https://docs.bugsee.com/sdk/ios/release-notes/)):
 
 - **SPM** tag `6.3.2` at `https://github.com/bugsee/spm`
 - **CocoaPods** trunk pod `Bugsee` `6.3.2`
@@ -22,7 +22,7 @@ Current stable pin (re-verified 2026-10-08 against the SPM tags and CocoaPods tr
 
 > **Note:** Always verify against [docs.bugsee.com/sdk/ios/installation/](https://docs.bugsee.com/sdk/ios/installation/) before implementing. Prefer registry tags over the release-notes page when they disagree.
 
-> **7.x is in beta — do not install it unless the user explicitly asks.** Latest SPM tag is `7.0.0-beta5` (also beta1–beta4) on `https://github.com/bugsee/spm`; `https://github.com/bugsee/feedback-spm` has matching tags. The [7.x release notes](https://docs.bugsee.com/sdk/ios/v7/release-notes/), [installation](https://docs.bugsee.com/sdk/ios/v7/installation/), and [migration guide](https://docs.bugsee.com/sdk/ios/v7/migration/) now document through **beta5** (checked 2026-10-08). This skill targets **6.x**; for a 7.x beta follow those pages rather than the 6.x code below. Pin both packages with the **Exact Version** rule at the **same** tag (`7.0.0-beta5`) — SPM keeps pre-releases out of version ranges, so "Up to Next Major" from 6.3.2 never resolves a 7.x beta.
+> **7.x is in beta — do not install it unless the user explicitly asks.** Latest SPM tag is `7.0.0-beta6` (also beta1–beta5) on `https://github.com/bugsee/spm`; `https://github.com/bugsee/feedback-spm` has matching tags. The [7.x release notes](https://docs.bugsee.com/sdk/ios/v7/release-notes/), [installation](https://docs.bugsee.com/sdk/ios/v7/installation/), and [migration guide](https://docs.bugsee.com/sdk/ios/v7/migration/) now document through **beta6** (checked 2026-10-13). This skill targets **6.x**; for a 7.x beta follow those pages rather than the 6.x code below. Pin both packages with the **Exact Version** rule at the **same** tag (`7.0.0-beta6`) — SPM keeps pre-releases out of version ranges, so "Up to Next Major" from 6.3.2 never resolves a 7.x beta.
 >
 > 7.x is a breaking line. Agent-relevant facts now on docs.bugsee.com:
 > - **Minimum is iOS 15 / tvOS 15** (raised in beta2; beta1's iOS 13 / tvOS 13 floor is obsolete). visionOS 1 unchanged. SPM is the only channel (CocoaPods and Carthage retired).
@@ -33,6 +33,14 @@ Current stable pin (re-verified 2026-10-08 against the SPM tags and CocoaPods tr
 > - The `BugseeReport` passed to the delegate is a live handle — mutations are what gets uploaded (`type` is read-only; no public initializer; do not keep it past the callback).
 > - `addSecureRectangle:` drops touches as well as pixels. Multi-window recording (beta4) records every window on screen; convert rectangles to screen coordinates.
 > - `log:level:enforceFiltering:` is renamed `log:level:requiresFiltering:`.
+> - **beta6 — video vs screenshot.** `BugseeOptionCaptureVideo` set to `NO` records no video and no touches. The report screenshot no longer follows it: turn the screenshot off with `screenshotEnabled = NO`.
+> - **beta6 — network body limit.** `BugseeOptionCaptureNetworkBodySizeLimit` is applied at any value (no 20480 floor). A body over the limit is skipped whole with `SizeTooLarge` instead of being cut; `0` captures no bodies. WebSocket frames of exactly the limit are kept.
+> - **beta6 — bluetooth.** `BugseeOptionCaptureBluetoothStatus` set to `NO` (the default) records no bluetooth trace; Bugsee no longer creates a Bluetooth central manager in that case.
+> - **beta6 — early crash.** `BugseeOptionDetectAndReportEarlyCrash` set to `NO` now turns early-crash protection off. Before, the option was read by nothing.
+> - **beta6 — delete on device.** `deleteCollectedDataOnDevice` now deletes 7.x captured data (it previously reported success without deleting). The completion reports whether deletion succeeded.
+> - **beta6 — report colors.** `reportCloseButtonColor` and `reportSendButtonColor` are deprecated and have no effect; the report screen uses the system Cancel and Done buttons.
+> - **beta6 — recovered-crash report handler.** The report handler (`onBeforeReportCreated` / `onAfterReportCreated`) can edit a crash recovered on the next launch for the whole handler window. Async work (e.g. labels) that used to miss the recovered report now lands if it completes within that window.
+> - **beta6 — Feedback first-open email.** On first open, BugseeFeedback asks for an e-mail address ("Get notified by email when the reply is available") before the chat. Continue saves it, Skip proceeds without one, closing with the cross asks again next time. A user identifier containing `@` skips the prompt. The `feedbackEmail*` theme keys apply to it. The module requires iOS 15+ (the UIKit chat for iOS 13 and 14 is removed).
 
 ---
 
