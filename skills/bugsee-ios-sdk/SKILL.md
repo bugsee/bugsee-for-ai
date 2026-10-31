@@ -46,8 +46,10 @@ find . -name "*.m" -not -path "*/Pods/*" 2>/dev/null | head -5
 # Dependency manager — 7.x ships via SPM
 ls Podfile Package.swift Cartfile 2>/dev/null
 
-# Existing Bugsee install (and which major version)
-grep -ri bugsee Podfile Package.swift Package.resolved Cartfile 2>/dev/null | head -10
+# Existing Bugsee install (and which major version) — also Xcode-managed SPM packages
+grep -rin bugsee Podfile Podfile.lock Package.swift Package.resolved Cartfile \
+  *.xcodeproj/project.pbxproj *.xcworkspace/xcshareddata/swiftpm/Package.resolved \
+  *.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved 2>/dev/null | head -10
 
 # Deployment target — 7.x requires iOS 15+
 grep -r "IPHONEOS_DEPLOYMENT_TARGET" *.xcodeproj/project.pbxproj 2>/dev/null | sort -u | head -5
@@ -71,8 +73,8 @@ grep -rnE '"(BugseeAppLaunchCrashDetectionKey|BugseeDefaultBugPriority|BugseeDef
 
 | Question | Impact |
 |----------|--------|
-| Deployment target below iOS 15? | Raise it — 7.x will not link otherwise |
-| `Podfile` / `Cartfile` only? | CocoaPods and Carthage are not supported in 7.x; add an SPM dependency (or the direct-download XCFramework) and remove the pod / Carthage entry |
+| Deployment target below iOS 15? | **Stop and ask the user.** 7.x needs iOS 15, and raising the minimum drops every user on older iOS versions — a product decision, not yours. Raise it only with their approval. If the app must keep iOS 12–14, switch to [`bugsee-ios-sdk-6x`](../bugsee-ios-sdk-6x/SKILL.md) |
+| `Podfile` / `Cartfile` only? | **Stop and ask the user.** CocoaPods and Carthage are not supported in 7.x: with their approval, add an SPM dependency (or the direct-download XCFramework) and remove the pod / Carthage entry. If they must stay on CocoaPods or Carthage, switch to [`bugsee-ios-sdk-6x`](../bugsee-ios-sdk-6x/SKILL.md) |
 | Existing Bugsee 6.x found? | This is a migration, not a fresh install — go to Phase 2b after Phase 2 |
 | Removed option keys found? | Replace them (see the "Removed" table in Phase 2b); their raw strings are ignored silently |
 | Raw 6.x option strings found? | They keep working (7.x translates them); swap them for `BugseeOption*` constants when convenient |
@@ -166,7 +168,7 @@ Work in this order — it is not arbitrary:
    events and traces keep being recorded. If the app used `pause` to stop *all* capture,
    `[Bugsee stop:]` is the honest replacement.
 
-Raising the deployment target to iOS 15 is a prerequisite for all of the above.
+An iOS 15 deployment target is a prerequisite for all of the above. If the app is below it, ask the user before raising it (see Phase 1); if they must keep the older target, stay on 6.x with [`bugsee-ios-sdk-6x`](../bugsee-ios-sdk-6x/SKILL.md).
 
 
 **Renamed.** A plain search and replace does most of these.
