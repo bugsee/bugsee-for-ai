@@ -48,7 +48,10 @@ jobs:
       matrix:
         include:
           - skill: bugsee-ios-sdk
-            repo: bugsee/spm                    # VERIFY (iOS SPM distribution)
+            repo: bugsee/spm                    # VERIFY (iOS SPM distribution; default branch tracks 7.x)
+          - skill: bugsee-ios-sdk-6x
+            repo: bugsee/spm
+            ref: "6.3.2"                        # VERIFY: last 6.x tag — MUST differ from the default branch, else 6.x drifts against 7.x
           - skill: bugsee-android-sdk
             repo: bugsee/bugsee-android         # VERIFY (private; current skill tracks 7.x — the repo's default branch)
           - skill: bugsee-android-sdk-6x

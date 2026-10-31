@@ -35,7 +35,8 @@ the platform and loads the right skill.
 | [`bugsee-cordova-sdk`](skills/bugsee-cordova-sdk/SKILL.md) | Full Bugsee SDK setup for Cordova. |
 | [`bugsee-dotnet-sdk`](skills/bugsee-dotnet-sdk/SKILL.md) | Full Bugsee SDK setup for .NET MAUI. |
 | [`bugsee-flutter-sdk`](skills/bugsee-flutter-sdk/SKILL.md) | Full Bugsee SDK setup for Flutter. |
-| [`bugsee-ios-sdk`](skills/bugsee-ios-sdk/SKILL.md) | Full Bugsee SDK setup for iOS. |
+| [`bugsee-ios-sdk`](skills/bugsee-ios-sdk/SKILL.md) | Full Bugsee SDK setup for iOS, tvOS and visionOS (7.x — the current SDK). |
+| [`bugsee-ios-sdk-6x`](skills/bugsee-ios-sdk-6x/SKILL.md) | Bugsee SDK setup for legacy iOS 6.x apps. |
 | [`bugsee-kmp-sdk`](skills/bugsee-kmp-sdk/SKILL.md) | Full Bugsee SDK setup for Kotlin Multiplatform. |
 | [`bugsee-react-native-sdk`](skills/bugsee-react-native-sdk/SKILL.md) | Full Bugsee SDK setup for React Native. |
 | [`bugsee-unity-sdk`](skills/bugsee-unity-sdk/SKILL.md) | Full Bugsee SDK setup for Unity. |

@@ -1,6 +1,6 @@
 ---
 name: bugsee-ios-sdk
-description: Full Bugsee SDK setup for iOS. Use when asked to add Bugsee to iOS, install Bugsee via SPM, CocoaPods, or Carthage, or set up bug reporting, crash reporting, video recording, APM, or build size analysis for iOS applications.
+description: Full Bugsee SDK setup for iOS, tvOS and visionOS (7.x — the current SDK). Use when asked to add Bugsee to iOS, install Bugsee via SPM, migrate a Bugsee 6.x integration to 7.x, or set up bug reporting, crash reporting, video recording, APM, or build size analysis for iOS applications. For legacy 6.x apps, use bugsee-ios-sdk-6x.
 license: MIT
 category: sdk-setup
 parent: bugsee-sdk-setup
@@ -12,138 +12,226 @@ allowed-tools: Bash, Read, Edit, Write, WebFetch, Glob, Grep
 
 # Bugsee iOS SDK
 
-Opinionated wizard that scans your iOS project and guides you through complete Bugsee setup — bug reporting with video, crash reporting, network monitoring, console logs, APM, and optional build size analysis.
+Opinionated wizard that scans an iOS project and either wires up Bugsee 7.x from scratch or migrates an existing 6.x integration — core SDK via Swift Package Manager, the separate Feedback package, breadcrumbs, blackout, and the new option-key family.
 
-Current stable pin (re-verified 2026-10-13 against the SPM tags and CocoaPods trunk; matches the [6.x release notes](https://docs.bugsee.com/sdk/ios/release-notes/)):
-
-- **SPM** tag `6.3.2` at `https://github.com/bugsee/spm`
-- **CocoaPods** trunk pod `Bugsee` `6.3.2`
-- **Carthage** binary catalog also lists `6.3.2`
-
-> **Note:** Always verify against [docs.bugsee.com/sdk/ios/installation/](https://docs.bugsee.com/sdk/ios/installation/) before implementing. Prefer registry tags over the release-notes page when they disagree.
-
-> **7.x is in beta — do not install it unless the user explicitly asks.** Latest SPM tag is `7.0.0-beta6` (also beta1–beta5) on `https://github.com/bugsee/spm`; `https://github.com/bugsee/feedback-spm` has matching tags. The [7.x release notes](https://docs.bugsee.com/sdk/ios/v7/release-notes/), [installation](https://docs.bugsee.com/sdk/ios/v7/installation/), and [migration guide](https://docs.bugsee.com/sdk/ios/v7/migration/) now document through **beta6** (checked 2026-10-13). This skill targets **6.x**; for a 7.x beta follow those pages rather than the 6.x code below. Pin both packages with the **Exact Version** rule at the **same** tag (`7.0.0-beta6`) — SPM keeps pre-releases out of version ranges, so "Up to Next Major" from 6.3.2 never resolves a 7.x beta.
->
-> 7.x is a breaking line. Agent-relevant facts now on docs.bugsee.com:
-> - **Minimum is iOS 15 / tvOS 15** (raised in beta2; beta1's iOS 13 / tvOS 13 floor is obsolete). visionOS 1 unchanged. SPM is the only channel (CocoaPods and Carthage retired).
-> - Every option constant is renamed into the `BugseeOption*` family (hard-coded strings silently fall back to defaults). `pause`/`resume` and several other methods are removed or renamed.
-> - Feedback is a separate package: add `https://github.com/bugsee/feedback-spm` at the same Exact Version as core. Each `BugseeFeedback` release requires that core version exactly.
-> - Nine defaults changed. The ninth (beta3): `BugseeOptionCaptureMachExceptions` is **YES** on iOS and visionOS (set `NO` for BSD signal handlers; tvOS always uses BSD).
-> - Every `BugseeDelegate` method has a new Swift name ([migration §4.6](https://docs.bugsee.com/sdk/ios/v7/migration/)). A 6.x-named Swift implementation compiles but is **never called**.
-> - The `BugseeReport` passed to the delegate is a live handle — mutations are what gets uploaded (`type` is read-only; no public initializer; do not keep it past the callback).
-> - `addSecureRectangle:` drops touches as well as pixels. Multi-window recording (beta4) records every window on screen; convert rectangles to screen coordinates.
-> - `log:level:enforceFiltering:` is renamed `log:level:requiresFiltering:`.
-> - **beta6 — video vs screenshot.** `BugseeOptionCaptureVideo` set to `NO` records no video and no touches. The report screenshot no longer follows it: turn the screenshot off with `screenshotEnabled = NO`.
-> - **beta6 — network body limit.** `BugseeOptionCaptureNetworkBodySizeLimit` is applied at any value (no 20480 floor). A body over the limit is skipped whole with `SizeTooLarge` instead of being cut; `0` captures no bodies. WebSocket frames of exactly the limit are kept.
-> - **beta6 — bluetooth.** `BugseeOptionCaptureBluetoothStatus` set to `NO` (the default) records no bluetooth trace; Bugsee no longer creates a Bluetooth central manager in that case.
-> - **beta6 — early crash.** `BugseeOptionDetectAndReportEarlyCrash` set to `NO` now turns early-crash protection off. Before, the option was read by nothing.
-> - **beta6 — delete on device.** `deleteCollectedDataOnDevice` now deletes 7.x captured data (it previously reported success without deleting). The completion reports whether deletion succeeded.
-> - **beta6 — report colors.** `reportCloseButtonColor` and `reportSendButtonColor` are deprecated and have no effect; the report screen uses the system Cancel and Done buttons.
-> - **beta6 — recovered-crash report handler.** The report handler (`onBeforeReportCreated` / `onAfterReportCreated`) can edit a crash recovered on the next launch for the whole handler window. Async work (e.g. labels) that used to miss the recovered report now lands if it completes within that window.
-> - **beta6 — Feedback first-open email.** On first open, BugseeFeedback asks for an e-mail address ("Get notified by email when the reply is available") before the chat. Continue saves it, Skip proceeds without one, closing with the cross asks again next time. A user identifier containing `@` skips the prompt. The `feedbackEmail*` theme keys apply to it. The module requires iOS 15+ (the UIKit chat for iOS 13 and 14 is removed).
-
----
+> **7.x is the current iOS SDK** (GA since 7.0.0). Latest release: `7.0.0` on `https://github.com/bugsee/spm` and `https://github.com/bugsee/feedback-spm` (re-verified 2026-10-31 against the SPM tags). If you are maintaining an app that stays on the 6.x line, use the legacy [6.x skill](../bugsee-ios-sdk-6x/SKILL.md) instead; when upgrading from 6.x, follow the [migration guide](https://docs.bugsee.com/sdk/ios/migration/).
 
 ## Invoke This Skill When
 
-- User asks to "add Bugsee to iOS" or "set up Bugsee" in an iOS/iPadOS app
-- User wants bug reporting, crash reporting, video recording, network monitoring, APM, or build size analysis in iOS
-- User mentions Bugsee CocoaPods, Bugsee SPM, Bugsee Carthage, or Bugsee for Swift/Objective-C
+- User asks to add Bugsee to an iOS, tvOS or visionOS app, or to set up bug reporting / crash reporting with Bugsee on iOS.
+- User asks to upgrade or migrate an existing Bugsee 6.x integration to 7.x.
+- User mentions **breadcrumbs** (`Bugsee.addBreadcrumb`, `setBreadcrumbFilter`, `getExchangeFactory`).
+- User mentions **blackout** (`startBlackout`, `endBlackout`, `isBlackout`).
+- User mentions **notification relay** (`Bugsee.notify`).
+- User mentions the **report handler** (`Bugsee.setReportHandler`, `BugseeReportHandler`), the **Crash Report Extension** (`BugseeCrashExtension`), or the separate **`BugseeFeedback`** package.
+- User mentions the `BugseeOption*` key family, `setUserIdentifier`, `showReportDialog`, `addSecureView`, or `addSecureRectangle`.
+- User needs **tvOS** or **visionOS** support (7.x only).
+
+Switch to the [6.x skill](../bugsee-ios-sdk-6x/SKILL.md) only when the user wants to stay on 6.x (for example, an app that must keep supporting iOS 12–14 or keep CocoaPods).
+
+> **Always verify against** [docs.bugsee.com/sdk/ios/installation/](https://docs.bugsee.com/sdk/ios/installation/) before implementing. 7.x docs live under `/sdk/ios/`; the 6.x docs moved to `/sdk/ios/v6/`.
 
 ---
 
 ## Phase 1: Detect
 
-Run these commands to understand the project:
-
 ```bash
-# Detect Xcode project
+# Xcode project / workspace
 ls *.xcodeproj *.xcworkspace 2>/dev/null
 
-# Detect Swift vs Objective-C
+# Swift vs Objective-C
 find . -name "*.swift" -not -path "*/Pods/*" -not -path "*/.build/*" 2>/dev/null | head -5
 find . -name "*.m" -not -path "*/Pods/*" 2>/dev/null | head -5
 
-# Detect dependency manager
+# Dependency manager — 7.x ships via SPM
 ls Podfile Package.swift Cartfile 2>/dev/null
 
-# Check for existing Bugsee
-grep -ri bugsee Podfile Package.swift Cartfile 2>/dev/null | head -5
+# Existing Bugsee install (and which major version)
+grep -ri bugsee Podfile Package.swift Package.resolved Cartfile 2>/dev/null | head -10
 
-# Find AppDelegate
+# Deployment target — 7.x requires iOS 15+
+grep -r "IPHONEOS_DEPLOYMENT_TARGET" *.xcodeproj/project.pbxproj 2>/dev/null | sort -u | head -5
+
+# Entry point
 find . -name "AppDelegate.swift" -o -name "AppDelegate.m" 2>/dev/null | head -3
-
-# Detect SwiftUI App lifecycle (no AppDelegate)
 grep -r "@main" --include="*.swift" 2>/dev/null | head -3
+
+# 6.x call sites that will not compile against 7.x
+grep -rnE "showReportController|showFeedbackController|setDefaultFeedbackGreeting|didReceiveNewFeedback|setView:.*asHidden|setView\(.*asHidden|addSecureRect\b|removeSecureRect\b|removeAllSecureRects|getAllSecureRects|isViewHidden|registerEvent|traceKey|registerNetworkEvent|removeNetworkEventFilter|setEmail|getEmail|clearEmail|getDeviceId|logAssert|hideKeyboard|testExceptionCrash|testSignalCrash|BugseeExceptionLoggingOptions|BugseeMergingRulesSkipFramesKey|logException.*options:|logError:[^;]*labels:|logError\(error:.*labels:|setDefaultCrashPriority|setDefaultErrorPriority|setDefaultBugPriority|Bugsee\.pause|Bugsee\.resume|\[Bugsee pause\]|\[Bugsee resume\]" \
+  --include="*.swift" --include="*.m" --include="*.mm" . 2>/dev/null | grep -v "/Pods/" | head -40
+
+# Removed option keys and properties (build errors), and their raw strings (silently ignored)
+grep -rnE "BugseeKillDetectionKey|BugseeEnableMachExceptionsKey|BugseeCaptureVideoAdaptiveKey|\.killDetection|\.enableMachExceptions|\.captureVideoAdaptive|\"CaptureVideoAdaptive\"|\"BugseeEnableMachExceptions\"" \
+  --include="*.swift" --include="*.m" --include="*.mm" . 2>/dev/null | grep -v "/Pods/" | head -20
+
+# Raw 6.x option strings — still translated in 7.x, but worth moving to the BugseeOption* constants
+grep -rnE '"(BugseeAppLaunchCrashDetectionKey|BugseeDefaultBugPriority|BugseeDefaultCrashPriority|BugseeDefaultErrorPriority|BugseeEnableMachExceptions|BugseeEnableOnDeviceSymbolication|BugseeKillDetectionKey|BugseeReportPrioritySelector|BugseeStyle|BuildTarget|BuildType|CaptureAVPlayer|CaptureLogs|CaptureOSLogs|CaptureVideoAdaptive|CrashReport|DataEncryption|DetectAppExit|FrameRate|MaxDataSize|MaxFrameRate|MaxRecordingTime|MinFrameRate|MonitorBluetoothStatus|MonitorDiskSpace|MonitorNetwork|MonitorWebSocket|PerformanceAdaptiveSampling|PerformanceMonitoring|PerformanceSampleRate|ReportDescriptionRequired|ReportEmailRequired|ReportLabelsEnabled|ReportLabelsRequired|ReportSummaryRequired|SanitizeNetworkData|ScreenshotEnabled|ScreenshotToReport|ShakeToReport|StatusBarInfo|VideoEnabled|VideoScale|ViewHierarchyEnabled|WifiOnlyUpload|bodySizeLimit)"' \
+  --include="*.swift" --include="*.m" --include="*.mm" . 2>/dev/null | grep -v "/Pods/" | head -20
 ```
 
 | Question | Impact |
 |----------|--------|
-| `Package.swift` exists or SPM? | Prefer Swift Package Manager (recommended going forward) |
-| `Cartfile` exists? | Use Carthage installation |
-| `Podfile` exists? | CocoaPods still works for existing projects; see the CocoaPods note below |
-| No dependency manager? | Use manual framework installation |
+| Deployment target below iOS 15? | Raise it — 7.x will not link otherwise |
+| `Podfile` / `Cartfile` only? | CocoaPods and Carthage are not supported in 7.x; add an SPM dependency (or the direct-download XCFramework) and remove the pod / Carthage entry |
+| Existing Bugsee 6.x found? | This is a migration, not a fresh install — go to Phase 2b after Phase 2 |
+| Removed option keys found? | Replace them (see the "Removed" table in Phase 2b); their raw strings are ignored silently |
+| Raw 6.x option strings found? | They keep working (7.x translates them); swap them for `BugseeOption*` constants when convenient |
+| Options never set explicitly? | Check the changed defaults in Phase 2b — shake/screenshot triggers, exit and early-crash detection, adaptive video, crash handler type, max data size |
+| Feedback call sites found? | Feedback needs the separate `BugseeFeedback` package |
 | Swift files found? | Show Swift init code |
 | Objective-C files found? | Show Objective-C init code |
-| `AppDelegate` found? | Add `Bugsee.launch()` there |
 | SwiftUI `@main` lifecycle? | See [SwiftUI docs](https://docs.bugsee.com/sdk/ios/swiftui/) |
-| Already has Bugsee? | Skip install, check initialization |
+
+> **Swift-only rename to watch for.** 6.x misspelled one Swift label: `Bugsee.logUnhandledException(exception:comlletion:)`. In 7.x it is `logUnhandledException(exception:completion:)`. Objective-C callers are unaffected, and the grep above will not catch it — check Swift call sites of `logUnhandledException` by hand.
 
 ---
 
 ## Phase 2: Install
 
-Choose one method based on the detected dependency manager. **Prefer SPM or Carthage for new installs.** CocoaPods trunk is scheduled to become read-only on **December 2, 2026** (test window November 1–7, 2026 per [the CocoaPods blog](https://blog.cocoapods.org/CocoaPods-Specs-Repo/)); existing Pod installs and the CDN continue to work. Keep the CocoaPods path for existing `Podfile` projects (6.3.2 is already on trunk).
-
-### Swift Package Manager (recommended)
-
-Add the package in Xcode:
-1. File > Add Package Dependencies
-2. Enter URL: `https://github.com/bugsee/spm`
-3. Select version **6.3.2** (latest tag) and add it to the app target
-
-### Carthage
-
-Add to `Cartfile`:
+7.x is distributed through Swift Package Manager, from the same repository 6.x used:
 
 ```
-binary "https://download.bugsee.com/sdk/ios/dynamic/Bugsee.json"
+https://github.com/bugsee/spm
 ```
 
-Then run:
+Which file you edit depends on how the project is laid out.
+
+**`Package.swift` exists** — edit it directly. Add the dependency and wire the product into the target:
+
+```swift
+dependencies: [
+    .package(url: "https://github.com/bugsee/spm", from: "7.0.0"),
+],
+targets: [
+    .target(
+        name: "YourApp",
+        dependencies: [
+            // Package identity is "spm" — the last path component of the URL, not "bugsee".
+            .product(name: "Bugsee", package: "spm"),
+        ]
+    ),
+]
+```
+
+Use `from:` (Xcode: **Up to Next Major Version**). Only a pre-release version (`-betaN`) needs `exact:`, because SwiftPM excludes pre-releases from version ranges. The package must also declare `platforms: [.iOS(.v15)]` or resolution fails.
+
+Products: `Bugsee` (app target), `BugseeSwiftUI` (app target, instead of `Bugsee`, for `bugseeProtect()`), `BugseeCrashExtension` (a Crash Reporter Extension target only, iOS 27+).
+
+**`.xcodeproj` with no package manifest** — the reference lives in `<project>.xcodeproj/project.pbxproj` as an `XCRemoteSwiftPackageReference` plus an `XCSwiftPackageProductDependency` wired into the target's `packageProductDependencies`. Hand-editing that file corrupts projects. Do not attempt it: ask the user to add the package once through Xcode (**File → Add Package Dependencies…**, the URL above, dependency rule **Up to Next Major Version** from 7.0.0), then continue from Phase 3. Confirm it landed before moving on:
 
 ```bash
-carthage update --use-xcframeworks
+grep -c "XCRemoteSwiftPackageReference" *.xcodeproj/project.pbxproj
+grep -rn "bugsee/spm" *.xcodeproj/project.pbxproj *.xcworkspace/xcshareddata/swiftpm/Package.resolved 2>/dev/null | head
 ```
 
-Drag `Bugsee.xcframework` from `Carthage/Build` into your target's "Frameworks, Libraries, and Embedded Content".
+> **Do not guess a pre-release.** Pin the latest 7.x release unless the user asks for a specific version. If an existing `Package.swift` or `Package.resolved` already references `bugsee/spm`, change the rule in place rather than adding a second dependency on the same repository.
 
-### CocoaPods (existing Podfile projects)
+Requirements: iOS 15+, tvOS 15+, visionOS 1+.
 
-CocoaPods trunk is scheduled to become read-only on **December 2, 2026** (test window November 1–7, 2026). Existing Pod installs and the CDN continue to work; only new Podspec publishes stop. Prefer SPM or Carthage for new integrations. If the project already uses CocoaPods, add to `Podfile`:
+For builds that cannot use SwiftPM (Unity, hand-embedded frameworks): download `https://download.bugsee.com/sdk/ios/spm/Bugsee-<version>.zip`, embed `Bugsee.xcframework` (Embed & Sign), and keep its `Tools/` folder (`BugseeAgent`, `BugseeClean`) inside the folder that contains the `.xcodeproj`.
 
-```ruby
-pod 'Bugsee', '6.3.2'
-```
+### Optional: in-app feedback
 
-Then run:
+Feedback is no longer in the core framework. It ships as a separate Swift package, `BugseeFeedback`, published with every core release at `https://github.com/bugsee/feedback-spm`. Add it only if the app uses in-app feedback / chat, with the **Exact Version** rule at the same version as the core package — each `BugseeFeedback` release requires that core version exactly. Its package identity is `feedback-spm`: `.product(name: "BugseeFeedback", package: "feedback-spm")`.
 
-```bash
-pod install
-pod update Bugsee   # install alone does not guarantee the latest trunk version
-```
+---
 
-### Manual
+## Phase 2b: Migrate 6.x call sites
 
-1. Download from [https://download.bugsee.com/sdk/ios/dynamic/Bugsee-stable.xcframework.zip](https://download.bugsee.com/sdk/ios/dynamic/Bugsee-stable.xcframework.zip)
-2. Extract and drag `Bugsee.xcframework` into your Xcode project
-3. Ensure "Embed & Sign" is selected in target settings
+Skip this phase for a fresh install. Run it whenever Phase 1 found existing Bugsee 6.x code.
+
+Work in this order — it is not arbitrary:
+
+1. **Check the defaults that changed.** These are silent. Unless the app sets them, 7.x
+   turns on shake-to-report (`BugseeOptionReportingTriggerByShake`), turns off
+   screenshot-to-report (`BugseeOptionReportingTriggerByScreenshot`), turns on exit and
+   early-crash detection (`BugseeOptionDetectAndReportExit`,
+   `BugseeOptionDetectAndReportEarlyCrash`) and adaptive video
+   (`BugseeOptionCaptureVideoAdaptive`), uses the `MachAndBSD` crash handler
+   (`BugseeOptionCaptureCrashHandlerType`) and raises `BugseeOptionConfigMaxDataSize` from 50
+   to 150 MB. Ask the user which 6.x behaviors to keep and pin those
+   ([§3](https://docs.bugsee.com/sdk/ios/migration/#3-defaults-that-changed)).
+2. **Build.** The removed keys and APIs surface as compiler errors, so let the build drive
+   the rest. Two things do not: the `BugseeDelegate` methods' new Swift names (a Swift
+   implementation with the 6.x name compiles and is never called — rename by hand,
+   [§4.6](https://docs.bugsee.com/sdk/ios/migration/#46-bugseedelegate-methods-have-new-swift-names)),
+   and lifecycle event raw values if the app forwards them as numbers.
+3. **Apply the renames** in the table below.
+4. **Rewire feedback** if the app uses it — see *Optional: in-app feedback* above.
+5. **Move option keys to the `BugseeOption*` constants.** The 6.x `Bugsee*Key` constants and
+   raw strings still work in 7.x, so this is not urgent, but options new in 7.x exist only
+   under the new names ([option tables](https://docs.bugsee.com/sdk/ios/migration/#2-option-keys)).
+6. **Re-check `pause` / `resume` by hand.** `startBlackout` / `endBlackout` is the closest
+   match but is narrower: it suppresses only what describes the screen, while logs, network
+   events and traces keep being recorded. If the app used `pause` to stop *all* capture,
+   `[Bugsee stop:]` is the honest replacement.
+
+Raising the deployment target to iOS 15 is a prerequisite for all of the above.
+
+
+**Renamed.** A plain search and replace does most of these.
+
+| 6.x | 7.x |
+| --- | --- |
+| `Bugsee.appearance()` | `Bugsee.getAppearance()` |
+| `Bugsee.activeSpan()` | `Bugsee.getActiveSpan()` |
+| `registerEvent:` | `event:` |
+| `registerEvent:withParams:` | `event:params:` (params now optional) |
+| `traceKey:withValue:` | `trace:value:` |
+| `registerNetworkEvent:` | `addNetworkEvent:` |
+| `registerNetworkEvent:needsToBeFiltered:` | `addNetworkEvent:requiresFiltering:` |
+| `removeNetworkEventFilter` | `setNetworkEventFilter:nil` |
+| `showReportController*` | `showReportDialog*` |
+| `setView:asHidden:` | `addSecureView:` / `removeSecureView:` |
+| `addSecureRect:` | `addSecureRectangle:` |
+| `removeSecureRect:` | `removeSecureRectangle:` |
+| `removeAllSecureRects` | `removeAllSecureRectangles` |
+| `getAllSecureRects` | `getAllSecureRectangles` |
+| `setEmail:` / `getEmail` / `clearEmail` | `setUserIdentifier:` / `getUserIdentifier` / `clearUserIdentifier` |
+| `clearAllAttribute` | `clearAllAttributes` |
+| `testExceptionCrash` / `testSignalCrash` | `testCrash` |
+| `uploadWithSummary:…:includeVideo:` | `uploadWithSummary:description:severity:labels:` |
+| `logError:labels:includeVideo:` / `logError:labels:` | `logError:`; labels via `addLabels:` on the report in `bugseeAttachmentsForReport:` |
+| `logException:options:completion:` | `logException:completion:` / `logException:domain:skipFrames:completion:` |
+| `logException:reason:options:completion:` | `logException:reason:completion:` / `logException:reason:domain:skipFrames:completion:` |
+| `BugseeExceptionLoggingOptions` (`exceptionDomain`, `mergingRules[BugseeMergingRulesSkipFramesKey]`, `labels`) | `domain:` / `skipFrames:` parameters of `logException`; labels via `addLabels:` on the report in `bugseeAttachmentsForReport:` (applies to every error report, not one call); `includeVideo` has no replacement |
+| Swift `Bugsee.launch(token:options:)` _(dictionary)_ | Swift `Bugsee.launch(token:dictionaryOptions:)` |
+| Swift `Bugsee.relaunch(options:)` _(dictionary)_ | Swift `Bugsee.relaunch(dictionaryOptions:)` |
+| Swift `Bugsee.uploadReport(_:)` | Swift `Bugsee.upload(_:)` |
+| Swift `Bugsee.deleteCollectedData(completion:)` | Swift `Bugsee.deleteCollectedDataOnDevice(completion:)`. The Objective-C selector `deleteCollectedDataOnDevice:` is unchanged and still deletes everything. Do not switch to the `includingIntermediate:` forms: they keep pending crashes (and, without `includingBundles:`, the reports waiting for upload) |
+| Swift `logUnhandledException(exception:comlletion:)` | Swift `logUnhandledException(exception:completion:)` |
+| CocoaPods / Carthage | Swift Package Manager or the direct-download XCFramework |
+| `showFeedbackController` | `[BugseeFeedback.shared showFeedbackUI]` |
+| `setDefaultFeedbackGreeting:` | `[BugseeFeedback.shared setGreeting:]` |
+| `bugsee:didReceiveNewFeedback:` | `BugseeFeedbackListener` |
+
+**Removed with no direct replacement.**
+
+| 6.x | Notes |
+| --- | --- |
+| `pause` / `resume` | Closest is `startBlackout` / `endBlackout`, which is narrower — see [§4.2](https://docs.bugsee.com/sdk/ios/migration/#42-pause-and-resume-are-gone) |
+| `getDeviceId` | — |
+| `accessToken` | — |
+| `isViewHidden:` | — |
+| `hideKeyboard:` | — |
+| `setInternalSecureRectangles:` | — |
+| `logAssert:withLocation:` | Use `logException:reason:completion:` |
+| `log:level:timestamp:` | `log:level:requiresFiltering:` takes the slot but does something different — it opts the message into the log filter |
+| `setDefaultCrashPriority:` | `BugseeOptionReportingDefaultCrashPriority` at launch |
+| `setDefaultErrorPriority:` | `BugseeOptionReportingDefaultErrorPriority` at launch |
+| `setDefaultBugPriority:` | `BugseeOptionReportingDefaultBugPriority` at launch |
+| `BugseeAttachmentOverrideLabels` | — |
+| `BugseeOptions.captureVideoAdaptive` / `BugseeCaptureVideoAdaptiveKey` | `BugseeOptionCaptureVideoAdaptive` key |
+| `BugseeLifecycleEventStarted` / `Resumed` / `Paused` | — (raw values of the remaining events changed) |
+| `BugseeEnableMachExceptionsKey` / `BugseeOptions.enableMachExceptions` | `BugseeOptionCaptureCrashHandlerType` / `crashHandlerType`: 6.x NO → `BugseeCrashHandlerTypeBSD`, YES → `BugseeCrashHandlerTypeMach`; the 7.x default is `BugseeCrashHandlerTypeMachAndBSD`. The old key, also as a plain string, is ignored with a console warning. New in 7.x: `BugseeOptionCaptureCrashSignals` / `crashSignals` chooses which fatal signals are intercepted; leave it unset, since the default intercepts every signal (the Xamarin and .NET SDKs leave out `SIGSEGV` and `SIGBUS`), and an explicit value is used as given |
+| `BugseeKillDetectionKey` / `BugseeOptions.killDetection` | Out-of-memory kills are reported through `BugseeOptionDetectAndReportExit`, on by default |
+
+
+Full detail, with before/after code for each: [migration guide](https://docs.bugsee.com/sdk/ios/migration/).
 
 ---
 
 ## Phase 3: Initialize
-
-Add Bugsee launch to your AppDelegate:
 
 **Swift:**
 
@@ -174,94 +262,124 @@ func application(_ application: UIApplication, didFinishLaunchingWithOptions lau
 }
 ```
 
-> Replace `<your_app_token>` with the token from your Bugsee dashboard.
+> Replace `<your_app_token>` with the token from the Bugsee dashboard.
 
-> Since v6.0.0 the Bugsee iOS SDK supports the simulator; crash capture is excluded. For full functionality, use a real device.
+> Simulator slices are built without the native crash reporter. Run on a real device to exercise crash capture.
+
+Capture is brought up off the main thread, and a launch from `didFinishLaunching` waits for the app to become active, so `launch` returns before the SDK is recording. The `started:` block only says the launch was accepted; to know recording is live, observe `Bugsee.sharedInstance()?.status` against `BugseeStatusLaunched` or implement `bugsee(didChangeStatus:)`.
+
+### Feedback wiring (only if `BugseeFeedback` was added)
+
+**Swift:**
+
+```swift
+import BugseeFeedback
+
+BugseeFeedback.register()          // optional (the package also registers itself on load); must come before launch
+Bugsee.launch(token: "<your_app_token>")
+
+// Present the chat
+BugseeFeedback.shared.showFeedbackUI()
+```
+
+**Objective-C:**
+
+```objectivec
+@import BugseeFeedback;
+
+[BugseeFeedback register];         // optional (the package also registers itself on load); must come before launch
+[Bugsee launchWithToken:@"<your_app_token>"];
+
+[BugseeFeedback.shared showFeedbackUI];
+```
 
 ---
 
 ## Phase 4: Configure (Optional)
 
-Launch with options for customization:
+Options are passed as a `BugseeOptions` object, as a dictionary keyed by the `BugseeOption*` constants, or both.
 
 **Swift:**
 
 ```swift
-let options = BugseeOptions()
+let options = BugseeOptions.default()
 options.shakeToReport = true
-options.reportPrioritySelector = true
 options.maxRecordingTime = 60
-options.captureVideoAdaptive = true          // 6.3.0 — lower FPS on idle UI
-options.performanceMonitoring = true         // 6.2.0 — APM (default YES)
-options.sanitizeNetworkData = true           // 6.1.3 — PII redaction (default YES)
+
+// Options with no BugseeOptions property are set by key:
+options.updateLaunch([
+    BugseeOptionCaptureBreadcrumbs: true,
+    BugseeOptionDetectAndReportHang: true,
+])
+
 Bugsee.launch(token: "<your_app_token>", options: options)
 ```
 
 **Objective-C:**
 
 ```objectivec
-BugseeOptions *options = [[BugseeOptions alloc] init];
+BugseeOptions *options = [BugseeOptions defaultOptions];
 options.shakeToReport = YES;
-options.reportPrioritySelector = YES;
 options.maxRecordingTime = 60;
-options.captureVideoAdaptive = YES;
-options.performanceMonitoring = YES;
-options.sanitizeNetworkData = YES;
+
+[options updateLaunchOptions:@{
+    BugseeOptionCaptureBreadcrumbs  : @YES,
+    BugseeOptionDetectAndReportHang : @YES,
+}];
+
 [Bugsee launchWithToken:@"<your_app_token>" options:options];
 ```
 
-Dictionary-key equivalents (same names as on the [configuration](https://docs.bugsee.com/sdk/ios/configuration/) page): `BugseeCaptureVideoAdaptiveKey` (`"CaptureVideoAdaptive"`), `BugseePerformanceMonitoringKey` (`performanceMonitoring`), `BugseeSanitizeNetworkDataKey` (`sanitizeNetworkData`). The configuration page may lag the 6.3.2 headers; the keys above are in the current SDK.
+> **Use the `BugseeOption*` constants.** 7.x still translates the 6.x constants and raw strings (`@"ShakeToReport"`), but options new in 7.x exist only under the new names, and an unknown key is ignored without a warning.
 
-Common options:
+Commonly used option keys:
 
-| Option | Default | Description |
-|--------|---------|-------------|
-| `videoEnabled` | `true` | Enable video recording |
-| `crashReport` | `true` | Catch and report crashes |
-| `monitorNetwork` | `true` | Capture network traffic |
-| `sanitizeNetworkData` | `true` | Auto-redact known PII keys from captured network events (6.1.3). Applies only when no custom network filter is set. |
-| `captureLogs` | `true` | Capture console logs |
-| `captureOSLogs` | `false` | **No effect since 6.3.2** — `os_log` / `Logger` capture was permanently disabled (it polled the log store all session). Still compiles; do not enable it expecting output. Use `Bugsee.log(...)` or `NSLog` for logs you want captured. |
-| `maxRecordingTime` | `60` | Max recording duration (seconds) |
-| `shakeToReport` | `false` | Shake device to trigger report |
-| `screenshotEnabled` | `true` | Attach screenshot to report |
-| `wifiOnlyUpload` | `false` | Upload only on WiFi |
-| `captureVideoAdaptive` | `false` | Opt-in adaptive screen capture (6.3.0): ~1 fps on a static screen, ramps to `maxFramerate` on visual activity |
-| `performanceMonitoring` | `true` | APM master switch (6.2.0). When `false`, `startTransaction` / `startSpan` return a shared no-op |
+| Key | Default | Description |
+|-----|---------|-------------|
+| `BugseeOptionCaptureVideo` | `YES` | Video recording. |
+| `BugseeOptionCaptureLogs` | `YES` | Console log capture. |
+| `BugseeOptionCaptureNetwork` | `YES` | Network traffic capture. |
+| `BugseeOptionCaptureBreadcrumbs` | `NO` | Automatic breadcrumb collection (new in 7.x). |
+| `BugseeOptionDetectAndReportCrash` | `YES` | Crash capture. |
+| `BugseeOptionReportingTriggerByShake` | `YES` | Shake-to-report gesture. Was `NO` in 6.x. |
+| `BugseeOptionReportingTriggerByScreenshot` | `NO` | Screenshot-to-report trigger. Was `YES` in 6.x. |
+| `BugseeOptionConfigDuration` | `60` | Max recording duration, seconds. |
+| `BugseeOptionConfigWifiOnlyUpload` | `NO` | Restrict uploads to Wi-Fi. |
+| `BugseeOptionPerformanceMonitoring` | `YES` | APM master switch. |
 
-Full options: [docs.bugsee.com/sdk/ios/configuration/](https://docs.bugsee.com/sdk/ios/configuration/)
+Full list: [configuration](https://docs.bugsee.com/sdk/ios/configuration/) · [6.x → 7.x key map](https://docs.bugsee.com/sdk/ios/migration/#2-option-keys).
 
-### APM (`startTransaction` / `startSpan`) — 6.2.0+
-
-Auto-instruments NSURLSession HTTP, NSData file I/O, NSFileManager operations, UIViewController lifecycle, and app startup. Transactions are attached to every report. SwiftUI auto-instrumentation is not in 6.3.2 yet.
-
-**Swift:**
+### New 7.x APIs worth wiring
 
 ```swift
-let tx = Bugsee.startTransaction(name: "Checkout", operation: "ui.checkout")
-let span = Bugsee.startSpan(operation: "db.query", description: "SELECT cart")
-// ... work ...
-span.finish()
-tx.finish()   // no-arg finish implies SpanStatus.ok
+// Suppress everything that describes the screen during a sensitive flow.
+// Logs, network events and traces keep being captured.
+Bugsee.startBlackout()
+Bugsee.endBlackout()
+
+// Identify the user (replaces 6.x setEmail).
+Bugsee.setUserIdentifier("user@example.com")
+
+// Custom breadcrumb.
+let crumb = Bugsee.getExchangeFactory().createBreadcrumb()
+crumb.category = "checkout"
+crumb.message  = "Coupon applied"
+crumb.type     = "user"
+Bugsee.addBreadcrumb(crumb)
+
+// Lightweight notification straight to the messaging integrations —
+// no video, logs or events attached.
+Bugsee.notify(title: "Checkout failed", body: "Provider returned 502")
 ```
 
-**Objective-C:**
+> A network filter does **not** reach breadcrumbs. If `setNetworkEventFilter` drops or rewrites a URL, repeat the rule in `setBreadcrumbFilter` or it will still appear in the breadcrumb trail.
 
-```objectivec
-id<BGSTransaction> tx = [Bugsee startTransactionWithName:@"Checkout" operation:@"ui.checkout"];
-id<BGSSpan> span = [Bugsee startSpanWithOperation:@"db.query" description:@"SELECT cart"];
-[span finish];
-[tx finishWithStatus:BGSSpanStatusOK];
-```
-
-When `performanceMonitoring` is `NO`, both APIs return a shared no-op singleton — no null checks needed. `startSpan` parents to the current active span on the calling thread (pthread TLS; it does not auto-propagate across `dispatch_async`).
-
-### BugseeAgent size analysis — 6.1.5+
+### BugseeAgent build info and size analysis
 
 The same `BugseeAgent` post-action that uploads dSYMs also registers a build record (version, configuration, VCS context, timings, Mach-O `LC_UUID`). Size analysis is opt-in.
 
 1. Add a Run Script **Archive** post-action (Product → Scheme → Edit Scheme → Archive → Post-actions). Set **Provide build settings from** to the app target.
-2. Script body (CocoaPods / manual — locates `BugseeAgent` in the project):
+2. Script body for the direct-download XCFramework (locates `BugseeAgent` in the archive's `Tools/` folder, kept inside the project folder):
 
    ```bash
    SCRIPT_SRC=$(find "$PROJECT_DIR" -name 'BugseeAgent' | head -1)
@@ -295,11 +413,20 @@ Full env-var reference: [build size analysis](https://docs.bugsee.com/sdk/ios/bu
 
 ## Verification
 
-After setup, build and run the app on a device. You should see a Bugsee floating button overlay. Tap it to file a test bug report.
+Build and run on a real device. Trigger a report end to end:
 
-Check the Bugsee dashboard for the incoming report.
+```swift
+// Programmatic trigger
+Bugsee.showReportDialog()
 
----
+// Or test crash capture (remove after verifying)
+Bugsee.testCrash()
+
+// Or a logged error
+Bugsee.logError(error: NSError(domain: "smoke", code: 1))
+```
+
+Check the Bugsee dashboard for the incoming report. If breadcrumbs are enabled, navigate a few screens first and confirm the trail appears on the report.
 
 ## Debug Symbols
 
@@ -319,13 +446,14 @@ Full workflow, including manual upload of App Store Connect dSYMs: [`bugsee-uplo
 ## Documentation Links
 
 - [Installation](https://docs.bugsee.com/sdk/ios/installation/)
+- [Migration from 6.x](https://docs.bugsee.com/sdk/ios/migration/)
 - [Configuration](https://docs.bugsee.com/sdk/ios/configuration/)
 - [SwiftUI](https://docs.bugsee.com/sdk/ios/swiftui/)
-- [Custom data](https://docs.bugsee.com/sdk/ios/custom/)
-- [Console logs](https://docs.bugsee.com/sdk/ios/logs/)
+- [Report handler](https://docs.bugsee.com/sdk/ios/report-handler/)
 - [Privacy](https://docs.bugsee.com/sdk/ios/privacy/overview/)
 - [Crash symbolication](https://docs.bugsee.com/sdk/ios/symbolication/)
+- [Bug reporting](https://docs.bugsee.com/sdk/ios/manual/bug-reporting/)
+- [Crash Report Extension](https://docs.bugsee.com/sdk/ios/issue-detection/crash-report-extension/)
 - [Build size analysis](https://docs.bugsee.com/sdk/ios/build-size-analysis/)
-- [Manual invocation](https://docs.bugsee.com/sdk/ios/manual/)
 - [Release notes](https://docs.bugsee.com/sdk/ios/release-notes/)
-- [7.x beta: installation](https://docs.bugsee.com/sdk/ios/v7/installation/) · [migration from 6.x](https://docs.bugsee.com/sdk/ios/v7/migration/) · [release notes](https://docs.bugsee.com/sdk/ios/v7/release-notes/)
+- [6.x docs](https://docs.bugsee.com/sdk/ios/v6/installation/) · [6.x skill](../bugsee-ios-sdk-6x/SKILL.md)
