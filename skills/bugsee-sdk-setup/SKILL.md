@@ -39,7 +39,8 @@ Each SDK skill contains its own detection logic, prerequisites, and step-by-step
 
 | Platform | Skill | Standalone path |
 |---|---|---|
-| iOS / iPadOS (Swift, Objective-C) | [`bugsee-ios-sdk`](../bugsee-ios-sdk/SKILL.md) | `skills/bugsee-ios-sdk/SKILL.md` |
+| iOS / iPadOS, tvOS, visionOS (Swift, Objective-C) | [`bugsee-ios-sdk`](../bugsee-ios-sdk/SKILL.md) | `skills/bugsee-ios-sdk/SKILL.md` |
+| iOS 6.x (Legacy) | [`bugsee-ios-sdk-6x`](../bugsee-ios-sdk-6x/SKILL.md) | `skills/bugsee-ios-sdk-6x/SKILL.md` |
 | Android (Kotlin, Java) | [`bugsee-android-sdk`](../bugsee-android-sdk/SKILL.md) | `skills/bugsee-android-sdk/SKILL.md` |
 | Android 6.x (Legacy) | [`bugsee-android-sdk-6x`](../bugsee-android-sdk-6x/SKILL.md) | `skills/bugsee-android-sdk-6x/SKILL.md` |
 | Flutter / Dart | [`bugsee-flutter-sdk`](../bugsee-flutter-sdk/SKILL.md) | `skills/bugsee-flutter-sdk/SKILL.md` |
@@ -64,7 +65,7 @@ When more than one SDK could match, prefer the more specific one:
 - **Xamarin** (`*.csproj` referencing `Xamarin.*`, `Xamarin.Forms`) → `bugsee-xamarin-sdk`
 - **Kotlin Multiplatform** (`*.gradle.kts` with `kotlin("multiplatform")`, `bugsee-kotlin-multiplatform`) → `bugsee-kmp-sdk`
 - **Android only** (`build.gradle`/`build.gradle.kts` with the Android plugin, no cross-platform framework) → `bugsee-android-sdk` (7.x, the current SDK). Use `bugsee-android-sdk-6x` **only** when the app is pinned to the 6.x line or the user explicitly asks for the 6.x / legacy SDK.
-- **iOS only** (`Podfile`, `*.xcodeproj`/`*.xcworkspace`, no cross-platform framework) → `bugsee-ios-sdk`
+- **iOS only** (`Podfile`, `*.xcodeproj`/`*.xcworkspace`, no cross-platform framework) → `bugsee-ios-sdk` (7.x, the current SDK). Use `bugsee-ios-sdk-6x` **only** when the app is pinned to the 6.x line (iOS 12–14 support, CocoaPods or Carthage) or the user explicitly asks for the 6.x / legacy SDK.
 - **No match** → point the user to the [Bugsee Docs](https://docs.bugsee.com/).
 
 ## Quick Lookup
@@ -73,7 +74,8 @@ Match the project to a skill by keywords.
 
 | Keywords | Skill |
 |---|---|
-| ios, ipados, swift, objective-c, cocoapods, spm, swiftui, uikit, xcode | `bugsee-ios-sdk` |
+| ios, ipados, tvos, visionos, swift, objective-c, spm, swiftui, uikit, xcode | `bugsee-ios-sdk` |
+| ios 6, ios 6.x, legacy ios, cocoapods, carthage, old bugsee ios | `bugsee-ios-sdk-6x` |
 | android, kotlin, java, gradle, jetpack compose, okhttp, ktor, apm, auto-init, extension modules | `bugsee-android-sdk` |
 | android 6, android 6.x, legacy android, old bugsee-android | `bugsee-android-sdk-6x` |
 | flutter, dart, pubspec | `bugsee-flutter-sdk` |
