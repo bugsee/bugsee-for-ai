@@ -385,7 +385,7 @@ The same `BugseeAgent` post-action that uploads dSYMs also registers a build rec
 
    ```bash
    SCRIPT_SRC=$(find "$PROJECT_DIR" -name 'BugseeAgent' | head -1)
-   if [ ! "$SCRIPT_SRC" ]; then
+   if [ ! -f "$SCRIPT_SRC" ]; then
        echo "Error: BugseeAgent not found"
        exit 1
    fi
@@ -395,7 +395,7 @@ The same `BugseeAgent` post-action that uploads dSYMs also registers a build rec
    For **SPM**, replace the `find` line with:
 
    ```bash
-   SCRIPT_SRC="${BUILD_DIR%Build/*}SourcePackages/checkouts/spm/Tools/BugseeAgent"
+   SCRIPT_SRC="${BUILD_DIR%/Build/*}/SourcePackages/checkouts/spm/Tools/BugseeAgent"
    ```
 
 3. `BUGSEE_BUILD_INFO_ENABLED` is **ON by default** — do not set it. To also upload the IPA for download/install size, per-category breakdown, and per-file diffs, add scheme Environment Variables:
