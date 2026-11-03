@@ -144,7 +144,7 @@ Pin the CLI rather than floating on latest — current release **0.8.2**:
 
 ```bash
 npm i -D @bugsee/cli@0.8.2     # then: npx bugsee-cli sourcemaps inject ...
-# one-shot without a project install: npx @bugsee/cli  (bare npx bugsee-cli E404s)
+# one-shot without a project install: npx @bugsee/cli@0.8.2  (bare npx bugsee-cli E404s)
 ```
 
 iOS and Android **native** frames in a React Native app still need dSYMs and mapping files — see the sections above.
