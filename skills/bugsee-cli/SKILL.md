@@ -27,7 +27,7 @@ For the platform-by-platform symbol-upload story, use [`bugsee-upload-symbols`](
 Check for an existing install first — a build plugin may have already placed one:
 
 ```bash
-bugsee-cli --version    # -> "bugsee-cli 0.8.1"
+bugsee-cli --version    # -> "bugsee-cli 0.8.2"
 ```
 
 | Channel | Command | Use for |
@@ -40,7 +40,7 @@ bugsee-cli --version    # -> "bugsee-cli 0.8.1"
 
 Both installers download and **SHA-256-verify** the binary for the host from `download.bugsee.com` — no GitHub dependency. Override with `BUGSEE_CLI_VERSION` (pin an exact `X.Y.Z`), `BUGSEE_CLI_INSTALL_DIR`, or `BUGSEE_CLI_BASE_URL` (internal mirror).
 
-**Prefer `@bugsee/cli` over `@bugsee/bugsee-cli` in JS projects.** `@bugsee/cli` ships the binary in per-platform packages declared as `optionalDependencies`, so npm resolves exactly one and **nothing runs at install time** — it works under `--ignore-scripts`, under a lockfile-pinned CI install, and offline from a warm cache. `@bugsee/bugsee-cli` is the older single package whose `postinstall` downloads the binary on every fresh install; it still works and is still published, but it needs network at install time and does nothing under `--ignore-scripts`.
+**Prefer `@bugsee/cli` over `@bugsee/bugsee-cli` in JS projects.** `@bugsee/cli` ships the binary in per-platform packages declared as `optionalDependencies`, so npm resolves exactly one and **nothing runs at install time** — it works under `--ignore-scripts`, under a lockfile-pinned CI install, and offline from a warm cache. `@bugsee/bugsee-cli` is the older single package whose `postinstall` downloads the binary on every fresh install; GitHub [v0.8.2](https://github.com/bugsee/bugsee-cli/releases/tag/v0.8.2) says it is no longer published — use `@bugsee/cli`. npm still lists `@bugsee/bugsee-cli@0.8.2` as that package's last `latest` if a lockfile pins it; it needs network at install time and does nothing under `--ignore-scripts`.
 
 **`npx @bugsee/cli` vs `npx bugsee-cli`.** A one-shot run without adding it to a project is `npx @bugsee/cli` (the scoped package). After `npm i -D @bugsee/cli`, `npx bugsee-cli` works because the package provides that binary. A bare `npx bugsee-cli` *outside* a project that installed it looks up an unscoped `bugsee-cli` package and fails with `E404` (CLI 0.7.13+ guidance; confirmed in the `@bugsee/cli` README).
 
@@ -65,8 +65,9 @@ Integrations activate a new capability by pinning a **minimum CLI version**. Bef
 | `npx @bugsee/cli` one-shot guidance; `build-env machine-label` hostname on macOS/Windows | **0.7.13** |
 | `--type elf` directories / `native-debug-symbols.zip`; IL2CPP `LineNumberMappings.json` validation (exit 11); collect-all-before-upload; nil-UUID dSYM slices skipped | **0.8.0** |
 | `--type elf` upgrades a stored `SYMBOL_TABLE` (`.so.sym`) to full debug info on its own — no `--force`; the run logs `upgraded SYMBOL_TABLE -> FULL` (needs the matching server update, see below) | **0.8.1** |
+| Security/dependency bump; ANSI colour only when stderr is a TTY; no new commands or flags | **0.8.2** |
 
-Current release: **0.8.1** (npm `latest` on both `@bugsee/cli` and `@bugsee/bugsee-cli`, tag `v0.8.1`; published 2026-10-08). When a script needs a floor, gate on it:
+Current release: **0.8.2** (npm `latest` on `@bugsee/cli`, tag `v0.8.2`; published 2026-10-30). `@bugsee/bugsee-cli` last `latest` is also 0.8.2; GitHub v0.8.2 says that package is no longer published — prefer `@bugsee/cli`. When a script needs a floor, gate on it:
 
 ```bash
 bugsee-cli --version   # parse the X.Y.Z and compare, or just require a known-good install
@@ -208,4 +209,4 @@ The metadata resolvers exit 0 with empty output (`[]`, `{}`, `null`, empty strin
 - [Debug information files](https://docs.bugsee.com/cli/debug-files/) · [Source maps](https://docs.bugsee.com/cli/sourcemaps/) · [Builds](https://docs.bugsee.com/cli/builds/)
 - [iOS build publishing](https://docs.bugsee.com/cli/xcode/) · [Metadata resolvers](https://docs.bugsee.com/cli/metadata/) · [Exit codes](https://docs.bugsee.com/cli/exit-codes/) · [Self-update](https://docs.bugsee.com/cli/update/)
 
-The docs site covers the CLI through **0.8.1** (release notes for 0.7.11–0.8.1, `--exclude` / `--allow-sri` / `--strip-sources-content`, `--extension`, ELF directories/zips, `upload build` without `--artifact`, IL2CPP validation, exit codes). **`bugsee-cli <command> --help` is authoritative for the installed version**; check it before telling a user a flag does not exist. On 0.8.0 that help still requires `--uuid` for `--type elf` even where a docs example omits it — follow the binary.
+The docs site covers the CLI through **0.8.1** (release notes for 0.7.11–0.8.1, `--exclude` / `--allow-sri` / `--strip-sources-content`, `--extension`, ELF directories/zips, `upload build` without `--artifact`, IL2CPP validation, exit codes). GitHub [v0.8.2](https://github.com/bugsee/bugsee-cli/releases/tag/v0.8.2) is a security and logging release with **no new commands or flags** (ANSI colour only when stderr is a TTY). **`bugsee-cli <command> --help` is authoritative for the installed version**; check it before telling a user a flag does not exist. On 0.8.0 that help still requires `--uuid` for `--type elf` even where a docs example omits it — follow the binary.

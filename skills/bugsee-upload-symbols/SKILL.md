@@ -140,10 +140,10 @@ Maps upload several at a time on CLI 0.7.10+; `--concurrency N` sets a ceiling a
 
 Use `bugsee-cli` for React Native only when the bundle is emitted with a `.js` name. For web and other JS builds it is the better choice, since one binary covers JS maps *and* the native symbols the same app needs.
 
-Pin the CLI rather than floating on latest — current release **0.8.1**:
+Pin the CLI rather than floating on latest — current release **0.8.2**:
 
 ```bash
-npm i -D @bugsee/cli@0.8.1     # then: npx bugsee-cli sourcemaps inject ...
+npm i -D @bugsee/cli@0.8.2     # then: npx bugsee-cli sourcemaps inject ...
 # one-shot without a project install: npx @bugsee/cli  (bare npx bugsee-cli E404s)
 ```
 
