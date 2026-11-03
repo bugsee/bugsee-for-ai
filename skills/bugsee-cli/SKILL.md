@@ -34,7 +34,7 @@ bugsee-cli --version    # -> "bugsee-cli 0.8.2"
 |---|---|---|
 | Installer script | `curl --proto '=https' --tlsv1.2 -sSfL https://download.bugsee.com/cli/install.sh \| sh` | macOS / Linux, generic CI |
 | Installer script | `powershell -ExecutionPolicy ByPass -c "irm https://download.bugsee.com/cli/install.ps1 \| iex"` | Windows |
-| npm | `npm i -D @bugsee/cli` then `npx bugsee-cli`; one-shot: `npx @bugsee/cli` | JS toolchains — React Native, Cordova, Capacitor, web |
+| npm | `npm i -D @bugsee/cli@0.8.2` then `npx bugsee-cli`; one-shot: `npx @bugsee/cli@0.8.2` | JS toolchains — React Native, Cordova, Capacitor, web |
 | Homebrew | Bugsee tap | macOS developer machines |
 | Maven Central / NuGet / UPM | bundled by the plugin | Android Gradle, .NET MAUI, Unity |
 
@@ -42,7 +42,7 @@ Both installers download and **SHA-256-verify** the binary for the host from `do
 
 **Prefer `@bugsee/cli` over `@bugsee/bugsee-cli` in JS projects.** `@bugsee/cli` ships the binary in per-platform packages declared as `optionalDependencies`, so npm resolves exactly one and **nothing runs at install time** — it works under `--ignore-scripts`, under a lockfile-pinned CI install, and offline from a warm cache. `@bugsee/bugsee-cli` is the older single package whose `postinstall` downloads the binary on every fresh install; GitHub [v0.8.2](https://github.com/bugsee/bugsee-cli/releases/tag/v0.8.2) says it is no longer published — use `@bugsee/cli`. npm still lists `@bugsee/bugsee-cli@0.8.2` as that package's last `latest` if a lockfile pins it; it needs network at install time and does nothing under `--ignore-scripts`.
 
-**`npx @bugsee/cli` vs `npx bugsee-cli`.** A one-shot run without adding it to a project is `npx @bugsee/cli` (the scoped package). After `npm i -D @bugsee/cli`, `npx bugsee-cli` works because the package provides that binary. A bare `npx bugsee-cli` *outside* a project that installed it looks up an unscoped `bugsee-cli` package and fails with `E404` (CLI 0.7.13+ guidance; confirmed in the `@bugsee/cli` README).
+**`npx @bugsee/cli@0.8.2` vs `npx bugsee-cli`.** A one-shot run without adding it to a project is `npx @bugsee/cli@0.8.2` (the scoped package, pinned). After `npm i -D @bugsee/cli@0.8.2`, `npx bugsee-cli` works because the package provides that binary. A bare `npx bugsee-cli` *outside* a project that installed it looks up an unscoped `bugsee-cli` package and fails with `E404` (CLI 0.7.13+ guidance; confirmed in the `@bugsee/cli` README).
 
 Published platforms: macOS arm64 + x86_64, Linux x86_64 + aarch64, Windows x86_64 + arm64.
 
@@ -65,9 +65,8 @@ Integrations activate a new capability by pinning a **minimum CLI version**. Bef
 | `npx @bugsee/cli` one-shot guidance; `build-env machine-label` hostname on macOS/Windows | **0.7.13** |
 | `--type elf` directories / `native-debug-symbols.zip`; IL2CPP `LineNumberMappings.json` validation (exit 11); collect-all-before-upload; nil-UUID dSYM slices skipped | **0.8.0** |
 | `--type elf` upgrades a stored `SYMBOL_TABLE` (`.so.sym`) to full debug info on its own — no `--force`; the run logs `upgraded SYMBOL_TABLE -> FULL` (needs the matching server update, see below) | **0.8.1** |
-| Security/dependency bump; ANSI colour only when stderr is a TTY; no new commands or flags | **0.8.2** |
 
-Current release: **0.8.2** (npm `latest` on `@bugsee/cli`, tag `v0.8.2`; published 2026-10-30). `@bugsee/bugsee-cli` last `latest` is also 0.8.2; GitHub v0.8.2 says that package is no longer published — prefer `@bugsee/cli`. When a script needs a floor, gate on it:
+Current release: **0.8.2** (npm `latest` on `@bugsee/cli`, tag `v0.8.2`; published 2026-10-30). GitHub [v0.8.2](https://github.com/bugsee/bugsee-cli/releases/tag/v0.8.2) is a security/logging bump with **no new commands or flags** (ANSI colour only when stderr is a TTY) — it is **not** a capability floor; do not gate scripts on `>= 0.8.2`. `@bugsee/bugsee-cli` last `latest` is also 0.8.2; GitHub v0.8.2 says that package is no longer published — prefer `@bugsee/cli`. When a script needs a floor, gate on it:
 
 ```bash
 bugsee-cli --version   # parse the X.Y.Z and compare, or just require a known-good install
