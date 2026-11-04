@@ -14,7 +14,7 @@ allowed-tools: Bash, Read, Edit, Write, WebFetch, Glob, Grep
 
 Opinionated wizard that scans an iOS project and either wires up Bugsee 7.x from scratch or migrates an existing 6.x integration — core SDK via Swift Package Manager, the separate Feedback package, breadcrumbs, blackout, and the new option-key family.
 
-> **7.x is the current iOS SDK** (GA since 7.0.0). Latest release: `7.0.0` on `https://github.com/bugsee/spm` and `https://github.com/bugsee/feedback-spm` (re-verified 2026-10-31 against the SPM tags). If you are maintaining an app that stays on the 6.x line, use the legacy [6.x skill](../bugsee-ios-sdk-6x/SKILL.md) instead; when upgrading from 6.x, follow the [migration guide](https://docs.bugsee.com/sdk/ios/migration/).
+> **7.x is the current iOS SDK** (GA since 7.0.0). Latest release: `7.0.1` on `https://github.com/bugsee/spm` and `https://github.com/bugsee/feedback-spm` (tagged 2026-11-03; re-verified 2026-11-04 against the SPM tags). The [iOS release notes](https://docs.bugsee.com/sdk/ios/release-notes/) still document through 7.0.0 — 7.0.1 pin, changelog gap, and "do not invent APIs" are under **SDK 7.0.1 — agent notes**. Keep `from: "7.0.0"` (Xcode: **Up to Next Major Version**). If you are maintaining an app that stays on the 6.x line, use the legacy [6.x skill](../bugsee-ios-sdk-6x/SKILL.md) instead; when upgrading from 6.x, follow the [migration guide](https://docs.bugsee.com/sdk/ios/migration/).
 
 ## Invoke This Skill When
 
@@ -442,6 +442,12 @@ Two shapes, both driven by the [Bugsee CLI](../bugsee-cli/SKILL.md):
 > **Xcode 15+:** `ENABLE_USER_SCRIPT_SANDBOXING` defaults to `YES` and blocks a build phase from reading the dSYM folder. Set it to `NO` on the target, or declare the folder in the phase's input file lists.
 
 Full workflow, including manual upload of App Store Connect dSYMs: [`bugsee-upload-symbols`](../bugsee-upload-symbols/SKILL.md).
+
+---
+
+## SDK 7.0.1 — agent notes
+
+- **Patch pin.** SPM latest (`7.0.1` on `bugsee/spm` and `bugsee/feedback-spm`, tagged 2026-11-03; re-verified 2026-11-04). `Package.swift` on both packages only moved the binary URL / `exact:` pin from 7.0.0 to 7.0.1 — products, platforms, and the `BugseeCrashExtension` / `BugseeSwiftUI` layout are unchanged. The [iOS release notes](https://docs.bugsee.com/sdk/ios/release-notes/) still stop at 7.0.0. **No documented public API or `Options` change** relative to 7.0.0 — do not invent any. Pin **7.0.1** anyway. Keep `from: "7.0.0"` (Xcode: **Up to Next Major Version**); it resolves 7.0.1. Feedback still needs **Exact Version** at the same tag as core.
 
 ---
 
