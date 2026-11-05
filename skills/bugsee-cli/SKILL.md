@@ -12,7 +12,7 @@ allowed-tools: Bash, Read, Edit, Write, WebFetch, Glob, Grep
 
 # Bugsee CLI
 
-`bugsee-cli` is one cross-platform binary that owns everything Bugsee needs at build time: it uploads **debug information files** (dSYM, ELF, PDB, R8/ProGuard mappings, JS source maps, Unity IL2CPP line maps), injects **debug IDs** into JS bundles, uploads **build artefacts and metadata** for size analysis, and resolves **build-environment metadata** (VCS, CI provider, iOS dependency graph, Xcode version, Mach-O UUIDs).
+`bugsee-cli` is one cross-platform binary that owns everything Bugsee needs at build time: it uploads **debug information files** (dSYM, ELF, PDB, R8/ProGuard mappings, JS source maps, Unity IL2CPP line maps, Unity Mono portable PDBs), injects **debug IDs** into JS bundles, uploads **build artefacts and metadata** for size analysis, and resolves **build-environment metadata** (VCS, CI provider, iOS dependency graph, Xcode version, Mach-O UUIDs).
 
 Every Bugsee build integration — the Android Gradle plugin, the iOS SDK's build script, the fastlane plugin, the Unity post-build hook, the .NET MSBuild target, the Flutter Dart plugin — shells out to this binary rather than reimplementing HTTP, compression, retry, and the presigned-upload handshake. So the CLI is usually already there, installed by the plugin.
 
@@ -27,26 +27,26 @@ For the platform-by-platform symbol-upload story, use [`bugsee-upload-symbols`](
 Check for an existing install first — a build plugin may have already placed one:
 
 ```bash
-bugsee-cli --version    # -> "bugsee-cli 0.8.2"
+bugsee-cli --version    # -> "bugsee-cli 0.9.0"
 ```
 
 | Channel | Command | Use for |
 |---|---|---|
 | Installer script | `curl --proto '=https' --tlsv1.2 -sSfL https://download.bugsee.com/cli/install.sh \| sh` | macOS / Linux, generic CI |
 | Installer script | `powershell -ExecutionPolicy ByPass -c "irm https://download.bugsee.com/cli/install.ps1 \| iex"` | Windows |
-| npm | `npm i -D @bugsee/cli@0.8.2` then `npx bugsee-cli`; one-shot: `npx @bugsee/cli@0.8.2` | JS toolchains — React Native, Cordova, Capacitor, web |
+| npm | `npm i -D @bugsee/cli@0.9.0` then `npx bugsee-cli`; one-shot: `npx @bugsee/cli@0.9.0` | JS toolchains — React Native, Cordova, Capacitor, web |
 | Homebrew | Bugsee tap | macOS developer machines |
 | Maven Central / NuGet / UPM | bundled by the plugin | Android Gradle, .NET MAUI, Unity |
 
 Both installers download and **SHA-256-verify** the binary for the host from `download.bugsee.com` — no GitHub dependency. Override with `BUGSEE_CLI_VERSION` (pin an exact `X.Y.Z`), `BUGSEE_CLI_INSTALL_DIR`, or `BUGSEE_CLI_BASE_URL` (internal mirror).
 
-**Prefer `@bugsee/cli` over `@bugsee/bugsee-cli` in JS projects.** `@bugsee/cli` ships the binary in per-platform packages declared as `optionalDependencies`, so npm resolves exactly one and **nothing runs at install time** — it works under `--ignore-scripts`, under a lockfile-pinned CI install, and offline from a warm cache. `@bugsee/bugsee-cli` is the older single package whose `postinstall` downloads the binary on every fresh install; GitHub [v0.8.2](https://github.com/bugsee/bugsee-cli/releases/tag/v0.8.2) says it is no longer published — use `@bugsee/cli`. npm still lists `@bugsee/bugsee-cli@0.8.2` as that package's last `latest` if a lockfile pins it; it needs network at install time and does nothing under `--ignore-scripts`.
+**Prefer `@bugsee/cli` over `@bugsee/bugsee-cli` in JS projects.** `@bugsee/cli` ships the binary in per-platform packages declared as `optionalDependencies`, so npm resolves exactly one and **nothing runs at install time** — it works under `--ignore-scripts`, under a lockfile-pinned CI install, and offline from a warm cache. `@bugsee/bugsee-cli` is the older single package whose `postinstall` downloads the binary on every fresh install. GitHub [v0.8.2](https://github.com/bugsee/bugsee-cli/releases/tag/v0.8.2) retired it; the [v0.9.0 README](https://github.com/bugsee/bugsee-cli/blob/v0.9.0/README.md) lists it as **deprecated, frozen at 0.8.2**. npm `latest` on `@bugsee/bugsee-cli` is still **0.8.2** (no 0.9.0) — installing that name does **not** get 0.9.0. The legacy package needs network at install time and does nothing under `--ignore-scripts`. Use `@bugsee/cli`.
 
-**`npx @bugsee/cli@0.8.2` vs `npx bugsee-cli`.** A one-shot run without adding it to a project is `npx @bugsee/cli@0.8.2` (the scoped package, pinned). After `npm i -D @bugsee/cli@0.8.2`, `npx bugsee-cli` works because the package provides that binary. A bare `npx bugsee-cli` *outside* a project that installed it looks up an unscoped `bugsee-cli` package and fails with `E404` (CLI 0.7.13+ guidance; confirmed in the `@bugsee/cli` README).
+**`npx @bugsee/cli@0.9.0` vs `npx bugsee-cli`.** A one-shot run without adding it to a project is `npx @bugsee/cli@0.9.0` (the scoped package, pinned). After `npm i -D @bugsee/cli@0.9.0`, `npx bugsee-cli` works because the package provides that binary. A bare `npx bugsee-cli` *outside* a project that installed it looks up an unscoped `bugsee-cli` package and fails with `E404` (CLI 0.7.13+ guidance; confirmed in the `@bugsee/cli` README).
 
 Published platforms: macOS arm64 + x86_64, Linux x86_64 + aarch64, Windows x86_64 + arm64.
 
-Keep an installed binary current with `bugsee-cli update` (same-major only — never a breaking major bump). In a build script use `bugsee-cli update --max-age 12h`, which checks at most once per interval and is best-effort: any failure is logged and exits 0, so it can run on every build without ever breaking one.
+Keep an installed binary current with `bugsee-cli update` (same-major only — never a breaking major bump). In a build script use `bugsee-cli update --max-age 12h`, which checks at most once per interval and is best-effort: any failure is logged and exits 0, so it can run on every build without ever breaking one. From **0.9.0**, `update` on Windows also removes leftover previous-binary copies that `self-replace` left in `%TEMP%` (crate-owned names only; errors ignored). Nothing changes on macOS or Linux.
 
 ---
 
@@ -65,8 +65,9 @@ Integrations activate a new capability by pinning a **minimum CLI version**. Bef
 | `npx @bugsee/cli` one-shot guidance; `build-env machine-label` hostname on macOS/Windows | **0.7.13** |
 | `--type elf` directories / `native-debug-symbols.zip`; IL2CPP `LineNumberMappings.json` validation (exit 11); collect-all-before-upload; nil-UUID dSYM slices skipped | **0.8.0** |
 | `--type elf` upgrades a stored `SYMBOL_TABLE` (`.so.sym`) to full debug info on its own — no `--force`; the run logs `upgraded SYMBOL_TABLE -> FULL` (needs the matching server update, see below) | **0.8.1** |
+| `--type portable-pdb` / `debug-files convert --to bmf` (Unity Mono Release builds; `--shipped-dir` for stripped assemblies) | **0.9.0** |
 
-Current release: **0.8.2** (npm `latest` on `@bugsee/cli`, tag `v0.8.2`; published 2026-10-30). GitHub [v0.8.2](https://github.com/bugsee/bugsee-cli/releases/tag/v0.8.2) is a security/logging bump with **no new commands or flags** (ANSI colour only when stderr is a TTY) — it is **not** a capability floor; do not gate scripts on `>= 0.8.2`. `@bugsee/bugsee-cli` last `latest` is also 0.8.2; GitHub v0.8.2 says that package is no longer published — prefer `@bugsee/cli`. When a script needs a floor, gate on it:
+Current release: **0.9.0** (npm `latest` on `@bugsee/cli`, tag `v0.9.0`; published 2026-11-04). GitHub [v0.9.0](https://github.com/bugsee/bugsee-cli/releases/tag/v0.9.0) is a capability floor for Unity Mono portable-PDB upload/convert — an integrator must require **>= 0.9.0** before using those commands. 0.8.2 remains a security/logging bump with **no new commands or flags** (ANSI colour only when stderr is a TTY) — do not gate scripts on `>= 0.8.2` for that. `@bugsee/bugsee-cli` last `latest` is still **0.8.2** (no 0.9.0 on that package); prefer `@bugsee/cli`. When a script needs a floor, gate on it:
 
 ```bash
 bugsee-cli --version   # parse the X.Y.Z and compare, or just require a known-good install
@@ -83,7 +84,7 @@ Two global values, each with a flag and an environment variable. A flag wins ove
 | App token | `--app-token` | `BUGSEE_APP_TOKEN` | — (required by upload commands) |
 | API endpoint | `--endpoint` | `BUGSEE_ENDPOINT` | `https://api.bugsee.com` |
 
-Prefer the environment variable in CI so the token never lands in a log or a shell history. Only the upload commands (`debug-files upload`, `upload build`, `upload build-info`, `xcode post-action`, `xcode upload-dsyms`) consume them; the metadata resolvers do no network I/O and ignore them.
+Prefer the environment variable in CI so the token never lands in a log or a shell history. Only the upload commands (`debug-files upload`, `upload build`, `upload build-info`, `xcode post-action`, `xcode upload-dsyms`) consume them; the metadata resolvers, `pack`, and `debug-files convert` do no network I/O and ignore them.
 
 **Never write a real app token into a file you commit.** Read it from the CI secret store.
 
@@ -93,7 +94,8 @@ Prefer the environment variable in CI so the token never lands in a log or a she
 
 | Command | What it does |
 |---|---|
-| `debug-files upload <paths>...` | Discover, package, and upload debug files. `--type dsym\|elf\|pdb\|proguard\|sourcemaps\|il2cpp-linemap\|rust` (default `proguard`) |
+| `debug-files upload <paths>...` | Discover, package, and upload debug files. `--type dsym\|elf\|pdb\|portable-pdb\|proguard\|sourcemaps\|il2cpp-linemap\|rust` (default `proguard`) |
+| `debug-files convert <input>...` | Convert .NET assemblies + portable PDBs to BMF locally (0.9.0+). `--to bmf --output <dir>`; `--shipped-dir` as on upload. `--to bsf` is not implemented (exit 20). Sends nothing |
 | `sourcemaps inject <paths>...` | Embed a deterministic debug ID into JS bundles and their `.map` files. Run before the upload |
 | `xcode post-action` | The whole iOS build-publish flow from an Xcode scheme post-action — build registration, build-info, dSYMs, size analysis, size gate |
 | `xcode upload-dsyms` | dSYMs only, from an Xcode Run Script **build phase**, with no build registration |
@@ -147,6 +149,32 @@ Directory with no matching libraries, or a path that does not exist: exit **10**
 
 A Mach-O slice with no `LC_UUID` is skipped rather than registered as the all-zero UUID; a bundle with no usable slice is rejected and fails an `xcode upload-dsyms` build phase.
 
+### Unity Mono portable PDB (0.9.0+)
+
+`--type portable-pdb` is for Unity **Mono** Release builds (IL2CPP stays `--type il2cpp-linemap`). Those builds ship no pdb, so the runtime prints `at Ns.Type.Method (args) [0x0000b] in:0` — a method, an IL offset, and a module id (MVID), no file or line. The CLI pairs each compiler assembly with its portable pdb, converts them to a BMF mapping keyed by signature and IL offset, and uploads it under the MVID the app actually ships. Needs CLI **0.9.0+**. `--uuid` is rejected (identity comes from the assembly). `--extension` is an error (an assembly is `X.dll` beside `X.pdb`).
+
+```bash
+# stripping Disabled: the shipped dll is the compiler's — one directory is enough
+bugsee-cli debug-files upload Library/Bee/artifacts/1300b0aP.dag --type portable-pdb \
+    --version 1.2.3 --build 45
+
+# stripping Low or higher: the linker rewrote the dlls (a new MVID)
+bugsee-cli debug-files upload Library/Bee/artifacts/1300b0aP.dag --type portable-pdb \
+    --version 1.2.3 --build 45 \
+    --shipped-dir Library/Bee/artifacts/Android/ManagedStripped
+```
+
+`--shipped-dir` is the app's own copies of those assemblies (`Library/Bee/artifacts/Android/ManagedStripped`, or `assets/bin/Data/Managed` of an unpacked APK). Methods the linker removed, or whose IL size changed, are left out and counted in the log. Point PATHS at **one** build's compiler output: with `--shipped-dir`, two different compiler copies of one assembly name mapping to the same shipped dll exit **11**. A pdb that does not belong to its assembly (CodeView GUID + stamp mismatch) also exits **11** and uploads nothing. A failed run leaves no partial set.
+
+Local-only counterpart (same conversion, writes `.bmf` files, sends nothing):
+
+```bash
+bugsee-cli debug-files convert Library/Bee/artifacts/1300b0aP.dag --to bmf --output ./bmf \
+    --shipped-dir Library/Bee/artifacts/Android/ManagedStripped
+```
+
+`--to bsf` is not implemented (exit 20). GitHub [v0.9.0](https://github.com/bugsee/bugsee-cli/releases/tag/v0.9.0) notes the worker side was deployed to staging with this release. The docs.bugsee.com debug-files page still lists `portable-pdb` as scaffold-only — follow the binary (`bugsee-cli debug-files upload --help`).
+
 ### Source maps, specifically
 
 `sourcemaps inject` stamps a content-derived debug ID into each bundle (`//# debugId=` plus a `globalThis._bugseeDebugIds` runtime registration) and into its `.map`. It is idempotent, and a bundle already carrying another tool's debug ID keeps that ID and gains only the registration. The upload then keys each map by that ID.
@@ -187,6 +215,9 @@ The exit code is a stable contract — branch on it rather than on the message t
 | `20`–`29` | Configuration problem (missing or rejected token, invalid flags) | Fix the token or the flags |
 | `30`–`39` | Upload problem (network, server 4xx/5xx) | Retry is reasonable; the CLI already retried with backoff |
 | `40` | A deliberate build gate failed (size check) | Report the gate — this is the intended outcome, not a bug |
+| `50` | InternalAfterSend — a panic after a request may have been sent; server state unknown (0.9.0+) | Do **not** retry or fall back (would duplicate a build registration). Report |
+
+From **0.9.0** a Rust panic is caught in `main` and mapped by phase: before any network request (a read-only GET counts) it exits **1** (`Unexpected`, fallback is reasonable); after a request may have been sent it exits **50**. It never exits **101**. No other exit codes changed.
 
 ## Output contract
 
@@ -208,4 +239,4 @@ The metadata resolvers exit 0 with empty output (`[]`, `{}`, `null`, empty strin
 - [Debug information files](https://docs.bugsee.com/cli/debug-files/) · [Source maps](https://docs.bugsee.com/cli/sourcemaps/) · [Builds](https://docs.bugsee.com/cli/builds/)
 - [iOS build publishing](https://docs.bugsee.com/cli/xcode/) · [Metadata resolvers](https://docs.bugsee.com/cli/metadata/) · [Exit codes](https://docs.bugsee.com/cli/exit-codes/) · [Self-update](https://docs.bugsee.com/cli/update/)
 
-The docs site covers the CLI through **0.8.1** (release notes for 0.7.11–0.8.1, `--exclude` / `--allow-sri` / `--strip-sources-content`, `--extension`, ELF directories/zips, `upload build` without `--artifact`, IL2CPP validation, exit codes). GitHub [v0.8.2](https://github.com/bugsee/bugsee-cli/releases/tag/v0.8.2) is a security and logging release with **no new commands or flags** (ANSI colour only when stderr is a TTY). **`bugsee-cli <command> --help` is authoritative for the installed version**; check it before telling a user a flag does not exist. On 0.8.0 that help still requires `--uuid` for `--type elf` even where a docs example omits it — follow the binary.
+The docs site covers the CLI through **0.8.2** (release notes for 0.7.11–0.8.2, `--exclude` / `--allow-sri` / `--strip-sources-content`, `--extension`, ELF directories/zips, `upload build` without `--artifact`, IL2CPP validation, exit codes). GitHub [v0.9.0](https://github.com/bugsee/bugsee-cli/releases/tag/v0.9.0) adds `--type portable-pdb`, `convert --to bmf`, exit **50**, and Windows `update` leftover cleanup; the debug-files page still lists `portable-pdb` as scaffold-only. **`bugsee-cli <command> --help` is authoritative for the installed version**; check it before telling a user a flag does not exist. On 0.8.0 that help still requires `--uuid` for `--type elf` even where a docs example omits it — follow the binary.

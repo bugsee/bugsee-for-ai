@@ -153,7 +153,15 @@ bugsee-cli debug-files upload path/to/Symbols/LineNumberMappings.json \
 
 The mapping is keyed by the IL2CPP module UUID(s) (`libil2cpp` / `UnityFramework`) — comma-separate them, or repeat `--uuid`, for a multi-ABI Android build. Sibling `MethodMap.tsv` / `il2cppFileRoot.txt` are picked up automatically when they sit next to the JSON. CLI **0.8.0+** validates the JSON before packing; a truncated or corrupt file exits **11** and uploads nothing.
 
-Full workflow: [`bugsee-upload-symbols`](../bugsee-upload-symbols/SKILL.md) · [Unity crashes](https://docs.bugsee.com/sdk/unity/crashes/).
+A **Mono** Release build ships no pdb. CLI **0.9.0+** (`--type portable-pdb`) converts each compiler assembly + portable pdb to a BMF mapping keyed by the shipped MVID. Add `--shipped-dir` when managed stripping is Low or higher. A pdb/assembly mismatch exits **11** and uploads nothing. `--uuid` is rejected.
+
+```bash
+bugsee-cli debug-files upload Library/Bee/artifacts/1300b0aP.dag --type portable-pdb \
+    --version 1.2.3 --build 45 \
+    --shipped-dir Library/Bee/artifacts/Android/ManagedStripped
+```
+
+Full workflow: [`bugsee-upload-symbols`](../bugsee-upload-symbols/SKILL.md) · [Unity crashes](https://docs.bugsee.com/sdk/unity/crashes/). The docs.bugsee.com debug-files page still lists `portable-pdb` as scaffold-only — follow the binary and GitHub [v0.9.0](https://github.com/bugsee/bugsee-cli/releases/tag/v0.9.0).
 
 ---
 

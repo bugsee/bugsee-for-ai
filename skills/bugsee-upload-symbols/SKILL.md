@@ -1,6 +1,6 @@
 ---
 name: bugsee-upload-symbols
-description: Make Bugsee stack traces readable by uploading debug symbols, source maps, and mapping files. Use when crash traces are unsymbolicated, minified, or obfuscated, or when asked to upload dSYMs, source maps, Android mapping/ProGuard/R8 files, or IL2CPP symbols.
+description: Make Bugsee stack traces readable by uploading debug symbols, source maps, and mapping files. Use when crash traces are unsymbolicated, minified, or obfuscated, or when asked to upload dSYMs, source maps, Android mapping/ProGuard/R8 files, IL2CPP symbols, or Unity Mono portable PDBs.
 license: MIT
 category: workflow
 parent: bugsee-workflow
@@ -26,7 +26,7 @@ The plugins all shell out to `bugsee-cli` underneath, so the two paths upload th
 ## Invoke This Skill When
 
 - Stack traces in Bugsee show hex addresses, minified names, or `<unknown>` frames
-- The user asks to upload dSYMs, source maps, mapping files, ProGuard/R8 output, or IL2CPP symbols
+- The user asks to upload dSYMs, source maps, mapping files, ProGuard/R8 output, IL2CPP symbols, or Unity Mono portable PDBs
 - A release was shipped and crashes are coming in unsymbolicated
 
 ---
@@ -140,11 +140,11 @@ Maps upload several at a time on CLI 0.7.10+; `--concurrency N` sets a ceiling a
 
 Use `bugsee-cli` for React Native only when the bundle is emitted with a `.js` name. For web and other JS builds it is the better choice, since one binary covers JS maps *and* the native symbols the same app needs.
 
-Pin the CLI rather than floating on latest — current release **0.8.2**:
+Pin the CLI rather than floating on latest — current release **0.9.0** (`@bugsee/cli`; the legacy `@bugsee/bugsee-cli` name is frozen at 0.8.2 and will not install 0.9.0):
 
 ```bash
-npm i -D @bugsee/cli@0.8.2     # then: npx bugsee-cli sourcemaps inject ...
-# one-shot without a project install: npx @bugsee/cli@0.8.2  (bare npx bugsee-cli E404s)
+npm i -D @bugsee/cli@0.9.0     # then: npx bugsee-cli sourcemaps inject ...
+# one-shot without a project install: npx @bugsee/cli@0.9.0  (bare npx bugsee-cli E404s)
 ```
 
 iOS and Android **native** frames in a React Native app still need dSYMs and mapping files — see the sections above.
@@ -160,7 +160,7 @@ Flutter release builds obfuscate Dart symbols; upload the split debug info so Da
 
 ---
 
-## Unity — IL2CPP line maps
+## Unity — IL2CPP line maps and Mono portable PDBs
 
 An IL2CPP build needs the line-number mapping in addition to the platform's native symbols (iOS dSYMs, Android ELF):
 
@@ -173,7 +173,17 @@ bugsee-cli debug-files upload path/to/Symbols/LineNumberMappings.json \
 
 The mapping is keyed by the IL2CPP module UUID(s) (`libil2cpp` / `UnityFramework`) — comma-separate them, or repeat `--uuid`, for a multi-ABI Android build. Sibling `MethodMap.tsv` / `il2cppFileRoot.txt` are picked up automatically when they sit next to the JSON. CLI **0.8.0+** validates the JSON before packing (`cpp_path` → `cs_path` → `{ cpp_line: cs_line }`); a truncated, empty, or wrong file exits **11** and uploads nothing.
 
-- Docs: [Unity crashes](https://docs.bugsee.com/sdk/unity/crashes/)
+A **Mono** Release build ships no pdb. CLI **0.9.0+** converts each compiler assembly + portable pdb to a BMF mapping (`--type portable-pdb`). Use `--shipped-dir` when managed stripping is Low or higher (the linker rewrites the dlls and the MVID changes). A pdb that does not belong to its assembly exits **11** and uploads nothing. `--uuid` is rejected.
+
+```bash
+bugsee-cli debug-files upload Library/Bee/artifacts/1300b0aP.dag --type portable-pdb \
+    --version 1.2.3 --build 45 \
+    --shipped-dir Library/Bee/artifacts/Android/ManagedStripped
+```
+
+Local-only conversion (writes `.bmf`, sends nothing): `bugsee-cli debug-files convert <input>... --to bmf --output <dir>` (same `--shipped-dir`; `--to bsf` exits 20). See [`bugsee-cli`](../bugsee-cli/SKILL.md).
+
+- Docs: [Unity crashes](https://docs.bugsee.com/sdk/unity/crashes/). The docs.bugsee.com debug-files page still lists `portable-pdb` as scaffold-only — follow `bugsee-cli debug-files upload --help` and GitHub [v0.9.0](https://github.com/bugsee/bugsee-cli/releases/tag/v0.9.0).
 
 ---
 
