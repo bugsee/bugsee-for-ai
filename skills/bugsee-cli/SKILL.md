@@ -14,7 +14,7 @@ allowed-tools: Bash, Read, Edit, Write, WebFetch, Glob, Grep
 
 `bugsee-cli` is one cross-platform binary that owns everything Bugsee needs at build time: it uploads **debug information files** (dSYM, ELF, PDB, R8/ProGuard mappings, JS source maps, Unity IL2CPP line maps, Unity Mono portable PDBs), injects **debug IDs** into JS bundles, uploads **build artefacts and metadata** for size analysis, and resolves **build-environment metadata** (VCS, CI provider, iOS dependency graph, Xcode version, Mach-O UUIDs).
 
-Every Bugsee build integration — the Android Gradle plugin, the iOS SDK's build script, the fastlane plugin, the Unity post-build hook, the .NET MSBuild target, the Flutter Dart plugin — shells out to this binary rather than reimplementing HTTP, compression, retry, and the presigned-upload handshake. So the CLI is usually already there, installed by the plugin.
+Bugsee's build integrations — the Android Gradle plugin, the iOS SDK's build script, the fastlane plugin, the Unity post-build hook, the Flutter Dart plugin — shell out to this binary rather than reimplementing HTTP, compression, retry, and the presigned-upload handshake. So the CLI is usually already there, installed by the plugin.
 
 **Reach for the CLI directly when** there is no plugin for the build system, the project is in CI without Xcode or Gradle, symbols need to be uploaded from a script, or a one-off upload has to be done by hand.
 
@@ -36,7 +36,8 @@ bugsee-cli --version    # -> "bugsee-cli 0.9.0"
 | Installer script | `powershell -ExecutionPolicy ByPass -c "irm https://download.bugsee.com/cli/install.ps1 \| iex"` | Windows |
 | npm | `npm i -D @bugsee/cli@0.9.0` then `npx bugsee-cli`; one-shot: `npx @bugsee/cli@0.9.0` | JS toolchains — React Native, Cordova, Capacitor, web |
 | Homebrew | Bugsee tap | macOS developer machines |
-| Maven Central / NuGet / UPM | bundled by the plugin | Android Gradle, .NET MAUI, Unity |
+
+Maven Central (`com.bugsee:bugsee-cli`), NuGet (`Bugsee.CLI`) and UPM (`com.bugsee.cli`) packages are planned, not published yet — do not tell a user to install the CLI from them.
 
 Both installers download and **SHA-256-verify** the binary for the host from `download.bugsee.com` — no GitHub dependency. Override with `BUGSEE_CLI_VERSION` (pin an exact `X.Y.Z`), `BUGSEE_CLI_INSTALL_DIR`, or `BUGSEE_CLI_BASE_URL` (internal mirror).
 
