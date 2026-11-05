@@ -150,7 +150,7 @@ Build and run on a device. The Bugsee floating button should appear. Tap it to f
 
 ## Debug Symbols
 
-Upload the symbol files for the release build so managed and native frames resolve. The .NET MAUI MSBuild target bundles and invokes the [Bugsee CLI](../bugsee-cli/SKILL.md); in CI you can run the same binary directly.
+Upload the symbol files for the release build so managed and native frames resolve. The `Bugsee` NuGet package ships an MSBuild target (`UploadSymbols`, hooked after `Build`/`Publish` on iOS, Mac Catalyst, and Android) that collects and uploads managed and native symbols during the build. It needs the app token as an assembly attribute, for example `[assembly: BugseePlugin.BugseeAppToken("<your_app_token>")]` — see [.NET symbolication](https://docs.bugsee.com/sdk/dotnet/symbolication/). It does not use the [Bugsee CLI](../bugsee-cli/SKILL.md); use the CLI only for CI jobs that upload symbols outside the MSBuild flow.
 
 A MAUI app crashing on iOS or Android also needs that platform's native symbols — dSYMs or the R8 mapping — not just the managed ones.
 
