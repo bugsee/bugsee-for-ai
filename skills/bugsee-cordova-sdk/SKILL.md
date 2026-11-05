@@ -96,7 +96,7 @@ Launch with options:
 
 ```javascript
 var options = {
-    shakeToTrigger: true,
+    shakeToReport: true,
     maxRecordingTime: 60,
     videoEnabled: true
 };
