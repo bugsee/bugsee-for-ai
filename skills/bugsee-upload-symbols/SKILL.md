@@ -16,10 +16,10 @@ Release builds strip or minify symbols, so crash stack traces arrive as raw addr
 
 Two ways to get symbols to Bugsee, and the choice is the same on every platform:
 
-1. **The build plugin for your build system** — the Android Gradle plugin, the iOS SDK's post-action script, the Unity post-build hook, the .NET MSBuild target. Wire it once and every release build uploads automatically. **Prefer this** when the project uses that build system.
+1. **The build plugin for your build system** — the Android Gradle plugin, the iOS SDK's post-action script, the Unity post-build hook, the .NET MSBuild target (its own `UploadSymbols` task, not the CLI). Wire it once and every release build uploads automatically. **Prefer this** when the project uses that build system.
 2. **[`bugsee-cli`](../bugsee-cli/SKILL.md) directly** — one binary, every format, works from any script or CI job. Use it when there is no plugin for the build system, when uploading from CI without Xcode or Gradle, or for a one-off upload of symbols that already exist.
 
-The plugins all shell out to `bugsee-cli` underneath, so the two paths upload the same thing. See [`bugsee-cli`](../bugsee-cli/SKILL.md) for install, flags, exit codes, and version floors.
+The plugins shell out to `bugsee-cli` underneath (the .NET MSBuild target excepted), so those paths upload the same thing as the CLI. See [`bugsee-cli`](../bugsee-cli/SKILL.md) for install, flags, exit codes, and version floors.
 
 **Whichever path you take, the artifact's version and build number must match the build that shipped.** A mismatch uploads a symbol that is accepted and then never resolves a crash — the most common reason traces stay raw after a "successful" upload.
 
@@ -189,7 +189,7 @@ Local-only conversion (writes `.bmf`, sends nothing): `bugsee-cli debug-files co
 
 ## .NET / MAUI and Xamarin
 
-Upload the symbol files for the release build so managed and native frames resolve. The .NET MAUI MSBuild target bundles and invokes `bugsee-cli`.
+Upload the symbol files for the release build so managed and native frames resolve. The `Bugsee` NuGet package ships an MSBuild target (`UploadSymbols`, after `Build`/`Publish`) that uploads managed and native symbols itself — it does not invoke `bugsee-cli`; set the app token with `[assembly: BugseePlugin.BugseeAppToken("<your_app_token>")]`.
 
 - Docs: [.NET symbolication](https://docs.bugsee.com/sdk/dotnet/symbolication/) · [Xamarin symbolication](https://docs.bugsee.com/sdk/xamarin/symbolication/)
 
