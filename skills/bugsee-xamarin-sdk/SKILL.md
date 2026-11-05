@@ -98,7 +98,7 @@ public class MyApplication : Application
     protected override void OnCreate()
     {
         base.OnCreate();
-        Bugsee.Launch(this, "<your_app_token>");
+        Bugsee.Launch("<your_app_token>");
     }
 }
 ```
@@ -128,9 +128,9 @@ Bugsee.Launch("<your_app_token>", options);
 
 ```csharp
 var options = new AndroidLaunchOptions();
-options.ShakeToTrigger = true;
+options.ShakeToReport = true;
 options.VideoEnabled = true;
-Bugsee.Launch(this, "<your_app_token>", options);
+Bugsee.Launch("<your_app_token>", options);
 ```
 
 Full options: [docs.bugsee.com/sdk/xamarin/configuration/](https://docs.bugsee.com/sdk/xamarin/configuration/)
