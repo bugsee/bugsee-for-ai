@@ -22,6 +22,8 @@ Opinionated wizard that guides you through complete Bugsee setup in Xamarin — 
 
 > **Note:** Always verify against [docs.bugsee.com/sdk/xamarin/installation/](https://docs.bugsee.com/sdk/xamarin/installation/).
 
+> **Deprecated:** Microsoft ended support for Xamarin on May 1, 2024, and the Bugsee Xamarin SDK is no longer actively maintained (last release **3.1.5**). For new projects, or when migrating, use [`bugsee-dotnet-sdk`](../bugsee-dotnet-sdk/SKILL.md) (.NET / MAUI).
+
 ---
 
 ## Phase 1: Detect
@@ -56,15 +58,15 @@ find . -name "AppDelegate.cs" -o -name "MainApplication.cs" -o -name "App.xaml.c
 
 Install via NuGet in each platform project:
 
-In Visual Studio: right-click project > Add > Add NuGet Packages > search "Bugsee" > Add Package.
+In Visual Studio: right-click project > Add > Add NuGet Packages > search "Bugsee.Xamarin" > Add Package.
 
 Or via CLI:
 
 ```bash
-nuget install Bugsee -Version 6.0.3
+nuget install Bugsee.Xamarin -Version 3.1.5
 ```
 
-Current NuGet latest (re-verified 2026-08-25): **Bugsee 6.0.3** (same package as .NET / MAUI).
+The Xamarin package is **`Bugsee.Xamarin`** (last release **3.1.5**). Do not install `Bugsee` here — that is the .NET / MAUI package (6.x) and has no Xamarin target (`net6.0-android` / `net6.0-ios` only).
 
 > Install the Bugsee package in each platform-specific project (iOS and Android), not the shared/PCL project.
 
