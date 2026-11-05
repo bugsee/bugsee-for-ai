@@ -61,7 +61,7 @@ dependencies:
   bugsee_flutter: ^9.0.4
 ```
 
-Current pub.dev latest (re-verified 2026-08-25): **9.0.4**. Docs still show `^8.0.0` — pin from the registry, not the installation page.
+Current pub.dev latest (re-verified 2026-08-25): **9.0.4**. The installation page shows `^9.0.0`; pin the exact latest from the registry.
 
 Then run:
 
