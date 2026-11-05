@@ -104,7 +104,7 @@ namespace YourNameSpace
         public override void OnCreate()
         {
             base.OnCreate();
-            BugseePlugin.Bugsee.Launch(this, "<your_app_token>");
+            BugseePlugin.Bugsee.Launch("<your_app_token>");
         }
     }
 }
@@ -133,9 +133,9 @@ BugseePlugin.Bugsee.Launch("<your_app_token>", options);
 
 ```csharp
 var options = new BugseePlugin.AndroidLaunchOptions();
-options.ShakeToTrigger = true;
+options.ShakeToReport = true;
 options.VideoEnabled = true;
-BugseePlugin.Bugsee.Launch(this, "<your_app_token>", options);
+BugseePlugin.Bugsee.Launch("<your_app_token>", options);
 ```
 
 Full options: [docs.bugsee.com/sdk/dotnet/configuration/](https://docs.bugsee.com/sdk/dotnet/configuration/)
