@@ -140,7 +140,7 @@ Launch with options:
 
 ```javascript
 const options = {
-  shakeToTrigger: true,
+  shakeToReport: true,
   maxRecordingTime: 60,
   videoEnabled: true,
 };
