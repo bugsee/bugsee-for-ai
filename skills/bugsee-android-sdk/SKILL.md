@@ -14,7 +14,7 @@ allowed-tools: Bash, Read, Edit, Write, WebFetch, Glob, Grep
 
 Opinionated wizard that scans the Android project and wires up Bugsee 7.x — core SDK, Gradle plugin, extension modules for network clients / Compose / feedback / NDK, APM, and manifest-based auto-launch.
 
-> **7.x is the current Android SDK** (`com.bugsee:bugsee-android:7.5.0`, Gradle plugin `com.bugsee.android.gradle` / `com.bugsee:bugsee-android-gradle-plugin:4.0.8`, re-verified 2026-11-06 on Maven Central; SDK lastUpdated 2026-11-06, plugin 2026-10-08) and the default for new and existing apps. Keep the two pins paired — the plugin's Compose launch crash fix (4.0.6+) requires SDK 7.1.4+; **7.5.0** satisfies that. **Never pin plugin 4.0.6** — it silently disables every SDK extension (see Phase 2). Plugin latest is **4.0.8** (7.5.0 does not require a plugin bump). 7.5.0 is the current Maven Central release; the [release notes](https://docs.bugsee.com/sdk/android/release-notes/) still document through 7.4.2 (a lifecycle and privacy release on 7.4.1's touch-capture fix and 7.4.0's reliability and API-clarity work) — upgrade apps on 7.0.0-beta1 through 7.4.2. **No documented public API or `Options` change** for 7.5.0 — do not invent any. It is plugin-based with a new API. If you are maintaining an app still pinned to the 6.x line, use the legacy [6.x skill](../bugsee-android-sdk-6x/SKILL.md) instead; when upgrading from 6.x, follow the [migration guide](https://docs.bugsee.com/sdk/android/migration/).
+> **7.x is the current Android SDK** (`com.bugsee:bugsee-android:7.5.1`, Gradle plugin `com.bugsee.android.gradle` / `com.bugsee:bugsee-android-gradle-plugin:4.0.8`, SDK re-verified 2026-11-12 on Maven Central, lastUpdated 2026-11-11; plugin as of 2026-11-06, lastUpdated 2026-10-08) and the default for new and existing apps. Keep the two pins paired — the plugin's Compose launch crash fix (4.0.6+) requires SDK 7.1.4+; **7.5.1** satisfies that. **Never pin plugin 4.0.6** — it silently disables every SDK extension (see Phase 2). Plugin latest is **4.0.8** (7.5.1 does not require a plugin bump). 7.5.1 is the current Maven Central release; the [release notes](https://docs.bugsee.com/sdk/android/release-notes/) document through 7.5.1 (a stability release: memory-leak and lifecycle fixes plus two read-only version getters, on 7.5.0's NDK crash-signal option and 7.4.x's lifecycle and privacy work) — upgrade apps on 7.0.0-beta1 through 7.5.0. The only new public API in 7.5.1 is `Bugsee.getSdkVersion()` / `Bugsee.getSdkBuild()`, with no new `Options` key — do not invent any. It is plugin-based with a new API. If you are maintaining an app still pinned to the 6.x line, use the legacy [6.x skill](../bugsee-android-sdk-6x/SKILL.md) instead; when upgrading from 6.x, follow the [migration guide](https://docs.bugsee.com/sdk/android/migration/).
 
 ## Invoke This Skill When
 
@@ -90,7 +90,7 @@ Decision table:
 
 ### Step 1 — Apply the Bugsee Gradle plugin (mandatory)
 
-7.x requires the plugin. Without it, APM, main-thread misuse detection, log capture rewrites, OkHttp injection, and Compose secure redaction do not work. Pin plugin **4.0.8** with SDK **7.5.0** (current Maven Central release as of 2026-11-06; keep the two pins paired). Do not stay on 4.0.7: it pins bugsee-cli 0.6.0, which silently uploads nothing for NDK `SYMBOL_TABLE` symbols when the CLI's auto-update is off or its download host is unreachable; 4.0.8 pins bugsee-cli 0.8.1. Plugin 4.x pairs with SDK 7.x; do not mix with plugin 3.x / SDK 6.x. There is no separate Gradle-plugin skill — apply the notes below from the [plugin release notes](https://docs.bugsee.com/sdk/android/gradle-plugin/releases/).
+7.x requires the plugin. Without it, APM, main-thread misuse detection, log capture rewrites, OkHttp injection, and Compose secure redaction do not work. Pin plugin **4.0.8** with SDK **7.5.1** (current Maven Central release as of 2026-11-12; keep the two pins paired). Do not stay on 4.0.7: it pins bugsee-cli 0.6.0, which silently uploads nothing for NDK `SYMBOL_TABLE` symbols when the CLI's auto-update is off or its download host is unreachable; 4.0.8 pins bugsee-cli 0.8.1. Plugin 4.x pairs with SDK 7.x; do not mix with plugin 3.x / SDK 6.x. There is no separate Gradle-plugin skill — apply the notes below from the [plugin release notes](https://docs.bugsee.com/sdk/android/gradle-plugin/releases/).
 
 **Kotlin DSL (`app/build.gradle.kts`):**
 
@@ -149,26 +149,26 @@ pluginManagement {
 
 With the plugin applied, the core `com.bugsee:bugsee-android` artifact is auto-pulled (bounded to the same MAJOR.MINOR series as the plugin's `sdk-min-version`). Dependency-driven extensions (OkHttp, Ktor 2/3, Cronet, Compose) are auto-installed when the matching library is in the graph. Feedback, NDK, and leak are **not** dependency-driven — enable them with the DSL toggles above.
 
-From plugin **4.0.6** (carried into 4.0.7 and 4.0.8): variants that do **not** include Bugsee (e.g. `debugImplementation` only) are no longer instrumented or wired. Flavors are handled the same way. Plain `implementation` is unchanged — do not invent extra plugin flags for that case. The Compose launch crash fix requires SDK **7.1.4+**; **7.5.0** satisfies that — do not pair plugin 4.0.6+ with an older 7.1.x SDK. No DSL changes. Plugin latest is **4.0.8** (Maven Central lastUpdated 2026-10-08; re-verified 2026-11-06).
+From plugin **4.0.6** (carried into 4.0.7 and 4.0.8): variants that do **not** include Bugsee (e.g. `debugImplementation` only) are no longer instrumented or wired. Flavors are handled the same way. Plain `implementation` is unchanged — do not invent extra plugin flags for that case. The Compose launch crash fix requires SDK **7.1.4+**; **7.5.1** satisfies that — do not pair plugin 4.0.6+ with an older 7.1.x SDK. No DSL changes. Plugin latest is **4.0.8** (Maven Central lastUpdated 2026-10-08; as of 2026-11-06).
 
 > **Plugin 4.0.6 is broken — upgrade it on sight.** In apps built against the published SDK, 4.0.6 stripped the extension providers from the manifest without registering the extensions in their place: **NDK crash reporting, feedback, Compose, OkHttp, Ktor, Cronet and leak detection never ran**, with a green build and a normally working app. Because the Compose extension never installed, content marked `bugseeSecure` was **not masked** in report screenshots. 4.0.7 fixes it. If an app is on 4.0.6 and cannot move yet, stay on 4.0.5 or set `optimizeExtensionsLoading.set(false)` in `bugsee {}`. Also in 4.0.7 ([release notes](https://docs.bugsee.com/sdk/android/gradle-plugin/releases/)):
 > - Only Bugsee's own extension providers are consolidated — a `Bugsee<Something>InitProvider` in the app or a wrapper SDK is no longer silently removed (4.0.0-beta10 → 4.0.6 removed them).
 > - If the plugin would strip extension providers it cannot register (e.g. an SDK older than 7.0.0-beta11 declared with a non-literal version such as `7.+`), the build now **fails** naming the providers and pointing at `optimizeExtensionsLoading` — that error means "pin a literal SDK version", not "disable the plugin".
 > - The built-in fallback uploader treats the server's "already uploaded" reply as success, so an unchanged mapping is no longer re-uploaded on every build.
-> - The auto-added SDK floor is still 7.2.0 (plugin 4.0.8). Auto-pull on `[7.2.0,8.0.0)` can resolve 7.5.0, but pin **7.5.0** explicitly so the latest 7.x release is locked (7.4.0 reliability/API-clarity, 7.4.1 touch-capture, 7.4.2 lifecycle/privacy, 7.5.0 Maven Central latest).
+> - The auto-added SDK floor is still 7.2.0 (plugin 4.0.8). Auto-pull on `[7.2.0,8.0.0)` can resolve 7.5.1, but pin **7.5.1** explicitly so the latest 7.x release is locked (7.4.0 reliability/API-clarity, 7.4.1 touch-capture, 7.4.2 lifecycle/privacy, 7.5.0 NDK crash signals, 7.5.1 Maven Central latest).
 
 ### Step 2 — Pin the core SDK (recommended)
 
-An explicit `com.bugsee:bugsee-android` declaration wins over auto-pull and locks the runtime. Pin **7.5.0**. Avoid `+`.
+An explicit `com.bugsee:bugsee-android` declaration wins over auto-pull and locks the runtime. Pin **7.5.1**. Avoid `+`.
 
 **Kotlin DSL:**
 
 ```kotlin
 dependencies {
-    implementation("com.bugsee:bugsee-android:7.5.0")
+    implementation("com.bugsee:bugsee-android:7.5.1")
     // Only if you did not use feedback.set(true) / ndk { enabled.set(true) } and need a manual pin:
-    // implementation("com.bugsee:bugsee-android-feedback:7.5.0")
-    // implementation("com.bugsee:bugsee-android-ndk:7.5.0")
+    // implementation("com.bugsee:bugsee-android-feedback:7.5.1")
+    // implementation("com.bugsee:bugsee-android-ndk:7.5.1")
 }
 ```
 
@@ -176,15 +176,15 @@ dependencies {
 
 ```groovy
 dependencies {
-    implementation 'com.bugsee:bugsee-android:7.5.0'
+    implementation 'com.bugsee:bugsee-android:7.5.1'
 }
 ```
 
 To suppress auto-install of a dependency-driven extension, set the corresponding flag in `bugsee { instrumentation { ... } }` (e.g. `cronet.set(false)`). To opt out of core auto-pull entirely, `sdkAutoLoad.set(false)`.
 
-> **Current stable releases (re-verified 2026-11-06 against Maven Central; SDK lastUpdated 2026-11-06):** SDK `com.bugsee:bugsee-android:7.5.0` (and matching `bugsee-android-compose`, `bugsee-android-ndk`, `bugsee-android-feedback`, `bugsee-android-okhttp`, `bugsee-android-ktor-2`, `bugsee-android-ktor-3`, `bugsee-android-cronet`, `bugsee-android-leak` at **7.5.0**) and Gradle plugin `4.0.8` (`com.bugsee:bugsee-android-gradle-plugin` / Plugin Portal `com.bugsee.android.gradle`; plugin lastUpdated 2026-10-08). The plugin tracks its own 4.x line, separate from the SDK — pin both together. 7.5.0 does not require a plugin bump.
+> **Current stable releases (SDK re-verified 2026-11-12 against Maven Central; SDK lastUpdated 2026-11-11):** SDK `com.bugsee:bugsee-android:7.5.1` (and matching `bugsee-android-compose`, `bugsee-android-ndk`, `bugsee-android-feedback`, `bugsee-android-okhttp`, `bugsee-android-ktor-2`, `bugsee-android-ktor-3`, `bugsee-android-cronet`, `bugsee-android-leak` at **7.5.1**) and Gradle plugin `4.0.8` (`com.bugsee:bugsee-android-gradle-plugin` / Plugin Portal `com.bugsee.android.gradle`; plugin lastUpdated 2026-10-08). The plugin tracks its own 4.x line, separate from the SDK — pin both together. 7.5.1 does not require a plugin bump.
 >
-> **SDK 7.5.0 / plugin 4.0.8 — cite, do not invent APIs.** 7.5.0 pin, changelog gap, and "do not invent APIs" are under **SDK 7.5.0 — agent notes** below. 7.4.2 is documented (lifecycle/privacy — no new public API or `Options`). 7.4.0 public API is **additive**: `Bugsee.deleteCollectedDataOnDevice(includingIntermediate, includingBundles, callback)` and `Bugsee.logException(Throwable, String domain, int skipFrames)`; `logException(Throwable, Map)` is deprecated. [Gradle plugin 4.0.8](https://docs.bugsee.com/sdk/android/gradle-plugin/releases/) is the latest Maven Central release. Its default `bugsee-cli` download floor is **0.8.1** (verified in the [plugin source](https://github.com/bugsee/bugsee-android-gradle-plugin) `CliBinaryResolver.DEFAULT_VERSION`, 2026-11-03) — standalone CLI 0.9.0 does not bump the plugin. Agents should **not** advise workarounds 7.1.4 / 4.0.6 made unnecessary:
+> **SDK 7.5.1 / plugin 4.0.8 — cite, do not invent APIs.** 7.5.1 pin, changelog gap, and "do not invent APIs" are under **SDK 7.5.1 — agent notes** below. 7.5.1 adds only `Bugsee.getSdkVersion()` / `getSdkBuild()` (no new `Options`); 7.5.0 added `NdkOptions.CrashSignals`; 7.4.2 is lifecycle/privacy (no new public API or `Options`). 7.4.0 public API is **additive**: `Bugsee.deleteCollectedDataOnDevice(includingIntermediate, includingBundles, callback)` and `Bugsee.logException(Throwable, String domain, int skipFrames)`; `logException(Throwable, Map)` is deprecated. [Gradle plugin 4.0.8](https://docs.bugsee.com/sdk/android/gradle-plugin/releases/) is the latest Maven Central release. Its default `bugsee-cli` download floor is **0.8.1** (verified in the [plugin source](https://github.com/bugsee/bugsee-android-gradle-plugin) `CliBinaryResolver.DEFAULT_VERSION`, 2026-11-03) — standalone CLI 0.9.0 does not bump the plugin. Agents should **not** advise workarounds 7.1.4 / 4.0.6 made unnecessary:
 > - **`relaunch()` callback (7.4.2).** A relaunch that cannot run (SDK not launched, launching, or stopping) now calls back with `false` (the callback was previously skipped). A second `relaunch()` while one is in progress joins it and receives its outcome.
 > - **`stop()` cancels a pending relaunch (7.4.2).** Calling `stop()` while a relaunch is stopping the SDK, or in the gap before it launches again, now leaves the SDK stopped. Before, the relaunch launched it again afterwards.
 > - **Secure fields while they move (7.4.2).** A password field that scrolls, is flung in a list, is removed, or sits in a screen that transitions or pans for the keyboard is masked along its whole path (short margin and a brief trail). Rectangles follow what is on screen (a field partly scrolled under a bottom bar no longer swallows taps on the bar; a field re-attached without a new layout pass is masked again). Overlapping secure-mask rectangles are merged before paint — masked pixels do not change.
@@ -208,7 +208,7 @@ To suppress auto-install of a dependency-driven extension, set the corresponding
 > - **Video last-frame hold (7.3.1).** A report that ends on a still screen holds the last shown frame until the end of the video instead of ending in black. Mid-video pauses and backgrounding remain black.
 > - **OTel-shaped performance spans (7.3.1).** Report performance data follows the OpenTelemetry trace format: transactions as spans, HTTP request spans named by method not URL, each span carrying device/app/network context, span ids 16 hex characters. No new `Options`.
 > - **Upgrade from 7.2.0 (and any 7.0.0-beta1+).** The SDK internal log attached to reports no longer records app HTTP URLs (including embedded credentials and query strings), `setUserIdentifier` / `setAttribute` values, performance-transaction URLs, or filter/listener text. Data written by an earlier 7.x is deleted on the first 7.3.0+ launch and never attached. Recommend the upgrade; do not invent a third-party leak — it stayed in the app's own Bugsee project.
-> - **Ktor.** 7.2.0 `bugsee-android-ktor-2` / `bugsee-android-ktor-3` did not compile `install(BugseeKtor2Plugin)`, `install(BugseeKtor3Plugin.Plugin)`, or `bugseeWebSocket` in Kotlin apps. Pin **7.5.0**.
+> - **Ktor.** 7.2.0 `bugsee-android-ktor-2` / `bugsee-android-ktor-3` did not compile `install(BugseeKtor2Plugin)`, `install(BugseeKtor3Plugin.Plugin)`, or `bugseeWebSocket` in Kotlin apps. Pin **7.5.1**.
 > - **Pending-report caps (defaults on).** `MaxDataSize` (150 MB), `MaxPendingReports` (30), `MaxPendingReportAge` (30 days). Past a limit, oldest unsent reports are deleted (errors before bugs before crashes). A device offline more than 30 days now drops the oldest instead of keeping them all.
 > - **ReportHandler.** Handlers no longer run on the main thread (they now also run for hang/ANR). If a handler touches views, post to the main thread. With `ReportHandlerCallbackTimeout` `0`, a handler that never completes no longer holds the report indefinitely.
 > - **`Bugsee.logException(null)`.** Now reports a simulated exception from the call site (groups by call site, not one empty issue).
@@ -217,7 +217,7 @@ To suppress auto-install of a dependency-driven extension, set the corresponding
 > - **Host logging.** Logging statements in the host app are unaffected by failures inside Bugsee capture.
 > - **Report UI / notifications.** Crash when the report screen is restored after process death; crash on light/dark theme change while a notification-opened report is on screen; Huawei Android 6 notification small-icon fallback; screenshot loss on some storage configs.
 > - **Variant / flavor wiring (4.0.6+).** Variants (and flavors) that do not include Bugsee are left uninstrumented. Plain `implementation` is unchanged.
-> - **Compose.** The Compose launch crash fix **requires SDK 7.1.4+**. **7.5.0** satisfies that. Keep the two pins paired.
+> - **Compose.** The Compose launch crash fix **requires SDK 7.1.4+**. **7.5.1** satisfies that. Keep the two pins paired.
 > - **Instrumentation / APM.** Thread-instrumentation crash fix; failed DB/file operations are now timed (host exception handling unchanged). Manifest optimization is applied only when the SDK version supports it; already-minified third-party libraries are left as-is.
 
 ---
@@ -321,7 +321,7 @@ Common toggles (including 7.1.x / 7.2.0 / 7.3.0 setup-relevant options):
 
 ### NDK native crashes (`bugsee-android-ndk`)
 
-Native crash detection is **not** in the core artifact. Enable it with the plugin DSL (`ndk { enabled.set(true) }`) or `implementation("com.bugsee:bugsee-android-ndk:7.5.0")`. The programmatic constant is `NdkOptions.DetectAndReport` (`com.bugsee.library.contracts.options.NdkOptions`; the `com.bugsee.library.ndk.contracts.options.NdkOptions` alias is `@Deprecated`), **not** the removed `Options.DetectAndReportCrashNdk`. Manifest key `com.bugsee.option.detect.crash-ndk` is unchanged; default is `true` once the module is on the classpath. From **7.3.1**, `DetectAndReportCrash` set to `false` also turns off native crash reporting (with the NDK extension present, earlier 7.x reported native crashes whatever `DetectAndReportCrash` said). A native crash an earlier run with detection on left on the device is still reported once. See [native crashes](https://docs.bugsee.com/sdk/android/issue-detection/native-crashes/).
+Native crash detection is **not** in the core artifact. Enable it with the plugin DSL (`ndk { enabled.set(true) }`) or `implementation("com.bugsee:bugsee-android-ndk:7.5.1")`. The programmatic constant is `NdkOptions.DetectAndReport` (`com.bugsee.library.contracts.options.NdkOptions`; the `com.bugsee.library.ndk.contracts.options.NdkOptions` alias is `@Deprecated`), **not** the removed `Options.DetectAndReportCrashNdk`. Manifest key `com.bugsee.option.detect.crash-ndk` is unchanged; default is `true` once the module is on the classpath. From **7.3.1**, `DetectAndReportCrash` set to `false` also turns off native crash reporting (with the NDK extension present, earlier 7.x reported native crashes whatever `DetectAndReportCrash` said). A native crash an earlier run with detection on left on the device is still reported once. See [native crashes](https://docs.bugsee.com/sdk/android/issue-detection/native-crashes/).
 
 ### WebSocket
 
@@ -366,9 +366,19 @@ The SDK must be stopped first ([data cleanup](https://docs.bugsee.com/sdk/androi
 
 `Bugsee.startBlackout()` / `endBlackout()` blank video and drop touches ([lifecycle](https://docs.bugsee.com/sdk/android/lifecycle/)). From 7.4.0, `startBlackout()` before `launch()` is honored until `endBlackout()`. A blackout ends when the SDK stops — call `startBlackout()` again before the next `launch()`. A launch that starts blacked out reports `BlackoutStarted` after `Launched`; a stop with an active blackout reports `BlackoutEnded` before `Stopped`.
 
+### SDK 7.5.1 — agent notes
+
+- **Pin.** Maven Central latest (`lastUpdated` 2026-11-11; re-verified 2026-11-12) with matching compose/ndk/feedback/okhttp/ktor-2/ktor-3/cronet/leak artifacts. Plugin stays **4.0.8** (7.5.1 does not require a plugin bump). [React Native 7.0.0-beta1 through 7.0.0-beta3](https://docs.bugsee.com/sdk/react_native/release-notes/) wrap an older Android SDK — that is the RN package pin, not this skill's Android pin.
+- **Version getters.** `Bugsee.getSdkVersion()` (e.g. `"7.5.1"`) and `Bugsee.getSdkBuild()` (the short commit hash) are static, read-only, work before `launch()` and are kept through R8. Compare them with the environment (`sdk.version` / `sdk.build`) of **live** reports only; a recovered report keeps the identity of the session that produced it.
+- **Host-set objects are held strongly.** The report handler, report/network/log/breadcrumb filters, the lifecycle listener, a wrapper and the feedback listener (`Feedback.setOnNewFeedbackListener`) stay referenced by SDK-wide state until replaced or set to `null`. Never capture an Activity, Fragment or View in them (hold UI objects through a `WeakReference`, not the listener itself). The feedback listener also survives `stop()` / `launch()` / `relaunch()`: set it once, and pass `null` when its owner goes away (`null` applies asynchronously, so one more callback may arrive on a worker thread).
+- **Span attributes are normalized when set.** `Bugsee.startTransaction(..., attributes)` and `Span.setAttribute` copy the value at the call (`Span.getAttributes()` returns copies): primitives and strings are kept, collections and maps are copied, and any other object becomes its `toString()`. That text can reach `performance.json` in reports and uploaded transactions (it used to be dropped from reports), so do not put sensitive objects in span attributes.
+- **Startup transaction.** If the first Activity is destroyed before its first draw (not a configuration change), the startup transaction ends `CANCELLED` instead of staying open until `stop()`.
+- **Compatibility.** The only new public API is the two getters; no new `Options`. The rest is memory-leak, out-of-memory and lifecycle fixes (WebView, privacy masking, Compose, screen capture, report dialog, leak and feedback extensions) that need no app change.
+
 ### SDK 7.5.0 — agent notes
 
-- **Pin.** Maven Central latest (`lastUpdated` 2026-11-06; re-verified 2026-11-06) with matching compose/ndk/feedback/okhttp/ktor-2/ktor-3/cronet/leak artifacts. The [Android release notes](https://docs.bugsee.com/sdk/android/release-notes/) and [github.com/bugsee/docs](https://github.com/bugsee/docs) `docs/sdk/android/release-notes.md` still stop at 7.4.2. **No documented public API or `Options` change** relative to 7.4.2 — do not invent any. Pin **7.5.0** anyway. Plugin stays **4.0.8** (7.5.0 does not require a plugin bump). [React Native 7.0.0-beta1 through 7.0.0-beta3](https://docs.bugsee.com/sdk/react_native/release-notes/) still lists Android SDK 7.4.2 as the native SDK they wrap — that is the RN package pin, not this skill's Android pin.
+- **NDK crash signals.** `NdkOptions.CrashSignals` (`com.bugsee.option.capture.crash-signals`) takes a bit set of the `CrashSignals` constants (`ABRT`, `SEGV`, `BUS`, `ILL`, `FPE`, `TRAP`, or `ALL`); the default `CrashSignals.DEFAULT` means every signal and is not combined with other values. A signal left out keeps its previous handler (e.g. leave out `SEGV` / `BUS` in a Mono/Unity host). Read once, when the handler is first armed.
+- **Native libraries and attachments.** A missing or unlinked `libbugsee-native` no longer crashes the app (video capture is skipped). Attachments cannot change after the report is submitted: a late `addAttachment` is refused and a still-open `openStream()` stream drops later writes, so flush or close any buffered wrapper before submit.
 
 ### SDK 7.4.2 — agent notes
 
