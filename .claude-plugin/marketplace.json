@@ -1,5 +1,6 @@
 {
   "name": "bugsee-plugin-marketplace",
+  "description": "Bugsee plugin for AI coding assistants: SDK setup, crash and bug-report debugging, build insights, and symbol uploads.",
   "owner": {
     "name": "Bugsee"
   },
