@@ -3,7 +3,7 @@ name: bugsee-workflow
 description: Debug Bugsee issues, inspect builds, and keep stack traces readable. Use when asked to fix or triage Bugsee crashes, errors, or bug reports, investigate a Bugsee issue, check a build's size or whether it regressed, audit a build's dependency vulnerabilities, upload debug symbols, source maps, or mapping files, or install and run the Bugsee CLI.
 license: MIT
 role: router
-allowed-tools: Bash, Read, Edit, Write, WebFetch, Glob, Grep
+allowed-tools: Read, Edit, Write, WebFetch, Glob, Grep
 ---
 
 > [All Skills](../../SKILL_TREE.md)
