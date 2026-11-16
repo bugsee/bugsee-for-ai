@@ -3,7 +3,7 @@ name: bugsee-sdk-setup
 description: Set up Bugsee in any mobile or cross-platform project. Detects the user's platform and loads the right SDK skill. Use when asked to add Bugsee, install a Bugsee SDK, or set up bug reporting, crash reporting, or video recording in an app.
 license: MIT
 role: router
-allowed-tools: Bash, Read, Edit, Write, WebFetch, Glob, Grep
+allowed-tools: Read, Edit, Write, WebFetch, Glob, Grep
 ---
 
 > [All Skills](../../SKILL_TREE.md)

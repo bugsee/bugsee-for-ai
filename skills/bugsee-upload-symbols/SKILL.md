@@ -5,7 +5,7 @@ license: MIT
 category: workflow
 parent: bugsee-workflow
 disable-model-invocation: true
-allowed-tools: Bash, Read, Edit, Write, WebFetch, Glob, Grep
+allowed-tools: Bash(bugsee-cli:*), Read, Edit, Write, WebFetch, Glob, Grep
 ---
 
 > [All Skills](../../SKILL_TREE.md) > [Workflows](../bugsee-workflow/SKILL.md) > Upload Symbols
