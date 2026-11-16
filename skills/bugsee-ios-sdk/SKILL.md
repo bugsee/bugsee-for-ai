@@ -78,7 +78,7 @@ grep -rnE '"(BugseeAppLaunchCrashDetectionKey|BugseeDefaultBugPriority|BugseeDef
 | Existing Bugsee 6.x found? | This is a migration, not a fresh install — go to Phase 2b after Phase 2 |
 | Removed option keys found? | Replace them (see the "Removed" table in Phase 2b); their raw strings are ignored silently |
 | Raw 6.x option strings found? | They keep working (7.x translates them); swap them for `BugseeOption*` constants when convenient |
-| Options never set explicitly? | Check the changed defaults in Phase 2b — shake/screenshot triggers, exit and early-crash detection, adaptive video, crash handler type, max data size |
+| Options never set explicitly? | Check the changed defaults in Phase 2b — screenshot trigger, exit and early-crash detection, adaptive video, crash handler type, max data size |
 | Feedback call sites found? | Feedback needs the separate `BugseeFeedback` package |
 | Swift files found? | Show Swift init code |
 | Objective-C files found? | Show Objective-C init code |
@@ -145,13 +145,14 @@ Skip this phase for a fresh install. Run it whenever Phase 1 found existing Bugs
 Work in this order — it is not arbitrary:
 
 1. **Check the defaults that changed.** These are silent. Unless the app sets them, 7.x
-   turns on shake-to-report (`BugseeOptionReportingTriggerByShake`), turns off
-   screenshot-to-report (`BugseeOptionReportingTriggerByScreenshot`), turns on exit and
+   turns off screenshot-to-report (`BugseeOptionReportingTriggerByScreenshot`), turns on exit and
    early-crash detection (`BugseeOptionDetectAndReportExit`,
    `BugseeOptionDetectAndReportEarlyCrash`) and adaptive video
    (`BugseeOptionCaptureVideoAdaptive`), uses the `MachAndBSD` crash handler
    (`BugseeOptionCaptureCrashHandlerType`) and raises `BugseeOptionConfigMaxDataSize` from 50
-   to 150 MB. Ask the user which 6.x behaviors to keep and pin those
+   to 150 MB. Shake-to-report (`BugseeOptionReportingTriggerByShake`) stays off, as in 6.x,
+   so with the defaults no gesture opens the report dialog. Ask the user which 6.x behaviors to
+   keep and whether their users need a report gesture, and pin those
    ([§3](https://docs.bugsee.com/sdk/ios/migration/#3-defaults-that-changed)).
 2. **Build.** The removed keys and APIs surface as compiler errors, so let the build drive
    the rest. Two things do not: the `BugseeDelegate` methods' new Swift names (a Swift
@@ -343,7 +344,7 @@ Commonly used option keys:
 | `BugseeOptionCaptureNetwork` | `YES` | Network traffic capture. |
 | `BugseeOptionCaptureBreadcrumbs` | `NO` | Automatic breadcrumb collection (new in 7.x). |
 | `BugseeOptionDetectAndReportCrash` | `YES` | Crash capture. |
-| `BugseeOptionReportingTriggerByShake` | `YES` | Shake-to-report gesture. Was `NO` in 6.x. |
+| `BugseeOptionReportingTriggerByShake` | `NO` | Shake-to-report gesture. |
 | `BugseeOptionReportingTriggerByScreenshot` | `NO` | Screenshot-to-report trigger. Was `YES` in 6.x. |
 | `BugseeOptionConfigDuration` | `60` | Max recording duration, seconds. |
 | `BugseeOptionConfigWifiOnlyUpload` | `NO` | Restrict uploads to Wi-Fi. |
