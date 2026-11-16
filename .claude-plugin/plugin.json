@@ -1,13 +1,27 @@
 {
   "name": "bugsee",
+  "displayName": "Bugsee",
   "description": "Bugsee plugin for Claude Code: set up Bugsee SDKs, debug crashes and bug reports, inspect builds for size and dependency vulnerabilities, and upload symbols — via the Bugsee MCP server and skills.",
   "version": "1.4.9",
   "author": {
     "name": "Bugsee"
   },
-  "keywords": ["bugsee", "bug-reporting", "crash-reporting", "monitoring", "debugging", "mobile"],
+  "keywords": [
+    "bugsee",
+    "bug-reporting",
+    "crash-reporting",
+    "monitoring",
+    "debugging",
+    "mobile"
+  ],
   "license": "MIT",
   "repository": "https://github.com/bugsee/bugsee-for-ai",
+  "homepage": "https://docs.bugsee.com/mcp/",
+  "icon": "./assets/logo.svg",
+  "documentationUrl": "https://docs.bugsee.com/mcp/",
+  "supportUrl": "https://github.com/bugsee/bugsee-for-ai/issues",
+  "privacyPolicyUrl": "https://bugsee.com/privacy/",
+  "termsOfServiceUrl": "https://bugsee.com/tos/",
   "mcpServers": {
     "bugsee": {
       "type": "http",

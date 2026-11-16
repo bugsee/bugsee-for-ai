@@ -91,3 +91,9 @@ CI validates the skill tree on every PR. A weekly drift-detection workflow is in
 ## License
 
 MIT. See [`LICENSE`](LICENSE).
+
+## Privacy & Support
+
+- Privacy policy: <https://bugsee.com/privacy/>
+- Terms of service: <https://bugsee.com/tos/>
+- Support: <https://github.com/bugsee/bugsee-for-ai/issues> or support@bugsee.com
