@@ -5,7 +5,7 @@ license: MIT
 category: sdk-setup
 parent: bugsee-sdk-setup
 disable-model-invocation: true
-allowed-tools: Bash, Read, Edit, Write, WebFetch, Glob, Grep
+allowed-tools: Read, Edit, Write, WebFetch, Glob, Grep
 ---
 
 > [All Skills](../../SKILL_TREE.md) > [SDK Setup](../bugsee-sdk-setup/SKILL.md) > Android SDK 6.x (Legacy)

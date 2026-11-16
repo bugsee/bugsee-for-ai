@@ -5,7 +5,7 @@ license: MIT
 category: workflow
 parent: bugsee-workflow
 disable-model-invocation: true
-allowed-tools: Bash, Read, Edit, Write, WebFetch, Glob, Grep
+allowed-tools: Bash(bugsee-cli:*), Read, Edit, Write, WebFetch, Glob, Grep
 ---
 
 > [All Skills](../../SKILL_TREE.md) > [Workflows](../bugsee-workflow/SKILL.md) > Bugsee CLI
@@ -32,14 +32,14 @@ bugsee-cli --version    # -> "bugsee-cli 0.9.0"
 
 | Channel | Command | Use for |
 |---|---|---|
-| Installer script | `curl --proto '=https' --tlsv1.2 -sSfL https://download.bugsee.com/cli/install.sh \| sh` | macOS / Linux, generic CI |
-| Installer script | `powershell -ExecutionPolicy ByPass -c "irm https://download.bugsee.com/cli/install.ps1 \| iex"` | Windows |
+| Installer script | `curl --proto '=https' --tlsv1.2 -sSfL -o "${TMPDIR:-/tmp}/bugsee-install.sh" https://download.bugsee.com/cli/install.sh && sh "${TMPDIR:-/tmp}/bugsee-install.sh"; rm -f "${TMPDIR:-/tmp}/bugsee-install.sh"` | macOS / Linux, generic CI |
+| Installer script | `irm https://download.bugsee.com/cli/install.ps1 -OutFile "$env:TEMP\bugsee-install.ps1"; powershell -ExecutionPolicy ByPass -File "$env:TEMP\bugsee-install.ps1"; Remove-Item "$env:TEMP\bugsee-install.ps1"` | Windows |
 | npm | `npm i -D @bugsee/cli@0.9.0` then `npx bugsee-cli`; one-shot: `npx @bugsee/cli@0.9.0` | JS toolchains — React Native, Cordova, Capacitor, web |
 | Homebrew | Bugsee tap | macOS developer machines |
 
 Maven Central (`com.bugsee:bugsee-cli`), NuGet (`Bugsee.CLI`) and UPM (`com.bugsee.cli`) packages are planned, not published yet — do not tell a user to install the CLI from them.
 
-Both installers download and **SHA-256-verify** the binary for the host from `download.bugsee.com` — no GitHub dependency. Override with `BUGSEE_CLI_VERSION` (pin an exact `X.Y.Z`), `BUGSEE_CLI_INSTALL_DIR`, or `BUGSEE_CLI_BASE_URL` (internal mirror).
+Download the installer to a temporary file (not the project directory), show the user the script if they want to review it, run it, then delete it — rather than piping it into a shell. Both installers download and **SHA-256-verify** the binary for the host from `download.bugsee.com` — no GitHub dependency. Override with `BUGSEE_CLI_VERSION` (pin an exact `X.Y.Z`), `BUGSEE_CLI_INSTALL_DIR`, or `BUGSEE_CLI_BASE_URL` (internal mirror).
 
 **Prefer `@bugsee/cli` over `@bugsee/bugsee-cli` in JS projects.** `@bugsee/cli` ships the binary in per-platform packages declared as `optionalDependencies`, so npm resolves exactly one and **nothing runs at install time** — it works under `--ignore-scripts`, under a lockfile-pinned CI install, and offline from a warm cache. `@bugsee/bugsee-cli` is the older single package whose `postinstall` downloads the binary on every fresh install. GitHub [v0.8.2](https://github.com/bugsee/bugsee-cli/releases/tag/v0.8.2) retired it; the [v0.9.0 README](https://github.com/bugsee/bugsee-cli/blob/v0.9.0/README.md) lists it as **deprecated, frozen at 0.8.2**. npm `latest` on `@bugsee/bugsee-cli` is still **0.8.2** (no 0.9.0) — installing that name does **not** get 0.9.0. The legacy package needs network at install time and does nothing under `--ignore-scripts`. Use `@bugsee/cli`.
 
